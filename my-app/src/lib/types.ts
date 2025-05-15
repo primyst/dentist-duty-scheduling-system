@@ -13,7 +13,7 @@ export type Department = {
 export type Staff = {
   id: string;
   name: string;
-  role: "doctor" | "nurse";
+  role: Role[];
   departments: string[];
 };
 
