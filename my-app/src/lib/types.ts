@@ -1,17 +1,21 @@
 export type Role = "doctor" | "nurse";
 
-export interface Staff {
-  id: string;
-  name: string;
-  role: Role;
-  departments: string[];
-}
-
-export interface Department {
+export type Department = {
   name: string;
   workdays: string[];
-  shifts: string[];
-}
+  shifts: {
+    time: string;
+    doctors: string[];
+    nurses: string[];
+  }[];
+};
+
+export type Staff = {
+  id: string;
+  name: string;
+  role: "doctor" | "nurse";
+  departments: string[];
+};
 
 export interface ShiftAssignment {
   department: string;
