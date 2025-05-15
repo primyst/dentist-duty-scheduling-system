@@ -43,4 +43,6 @@ export function generateShiftAssignments(): ShiftAssignment[] {
       }
     }
   }
+
+  return assignments;
 }
