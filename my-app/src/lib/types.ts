@@ -1,36 +1,13 @@
-export type Role = "doctor" | "nurse";
+export type StaffRole = "doctor" | "nurse";
 
-export type Department = {
-  name: string;
-  workdays: string[];
-  shifts: {
-    time: string;
-    doctors: string[];
-    nurses: string[];
-  }[];
-};
+export interface Staff { id: string; name: string; role: StaffRole; departments: string[]; totalShifts?: number; }
 
-export type Staff = {
-  id: string;
-  name: string;
-  role: Role[];
-  departments: string[];
-};
-
-export interface ShiftAssignment {
-  department: string;
-  day: string;
-  shift: string;
-  doctors: Staff[];
-  nurses: Staff[];
+export interface Department { name: string; workdays: string[];
+shifts: string[];
 }
 
-export interface ShiftSwapRequest {
-  id: string;
-  staffId: string;
-  department: string;
-  day: string;
-  shift: string;
-  reason: string;
-  status: "pending" | "approved" | "rejected";
-}
+export interface ShiftAssignment { department: string; shiftTime: string; doctor: Staff | null; nurse: Staff | null; }
+
+export interface DailySchedule { date: string; 
+ assignments: ShiftAssignment[]; }
+
