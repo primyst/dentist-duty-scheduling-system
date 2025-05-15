@@ -6,7 +6,6 @@ import { departments, staff } from "@/lib/data";
 import { DayPicker } from "react-day-picker";
 import "react-day-picker/dist/style.css";
 import { format } from "date-fns";
-import Cookies from "js-cookie";
 import { Clock, CalendarCheck } from "lucide-react";
 
 export default function StaffPage() {
@@ -16,13 +15,19 @@ export default function StaffPage() {
   const router = useRouter();
 
   useEffect(() => {
-    const staffId = Cookies.get("staffId");
-    if (!staffId) {
+    const user = localStorage.getItem("user");
+    if (!user) {
       router.push("/");
       return;
     }
 
-    const currentStaff = staff.find((s) => s.id === staffId);
+    const parsed = JSON.parse(user);
+    if (parsed.role !== "staff") {
+      router.push("/");
+      return;
+    }
+
+    const currentStaff = staff.find((s) => s.id === parsed.id);
     if (!currentStaff) {
       router.push("/");
       return;
