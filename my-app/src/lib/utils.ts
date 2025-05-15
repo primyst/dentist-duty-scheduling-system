@@ -1,48 +1,63 @@
-import { departments, staff } from "./data";
-import { ShiftAssignment, Staff } from "./types";
+import { Staff, Department, AssignedShift } from "./types";
 
-function getRandomStaff(pool: Staff[], count: number) {
-  const shuffled = [...pool].sort(() => 0.5 - Math.random());
-  return shuffled.slice(0, count);
-}
+// Count existing assignments for each staff member const countAssignments = (assignments: AssignedShift[], staffId: string) => { return assignments.filter((a) => a.staffId === staffId).length; };
 
-export function generateShiftAssignments(): ShiftAssignment[] {
-  const daysOfWeek = [
-    "Monday",
-    "Tuesday",
-    "Wednesday",
-    "Thursday",
-    "Friday",
-    "Saturday",
-    "Sunday",
-  ];
-  const assignments: ShiftAssignment[] = [];
+// Shuffle an array randomly (for fairness) const shuffle = <T,>(array: T[]): T[] => { return [...array].sort(() => Math.random() - 0.5); };
 
-  for (const dept of departments) {
-    for (const day of daysOfWeek) {
-      if (!dept.workdays.includes(day)) continue;
+// Distribute shifts fairly export function distributeShifts( staffList: Staff[], departments: Department[], date: Date ): AssignedShift[] { const assignments: AssignedShift[] = []; const dayName = date.toLocaleDateString("en-US", { weekday: "long" });
 
-      for (const shift of dept.shifts) {
-        const deptDoctors = staff.filter(
-          (s) => s.role === "doctor" && s.departments.includes(dept.name)
-        );
-        const deptNurses = staff.filter(
-          (s) => s.role === "nurse" && s.departments.includes(dept.name)
-        );
+for (const department of departments) { if (!department.workdays.includes(dayName)) continue;
 
-        const selectedDoctors = getRandomStaff(deptDoctors, 2);
-        const selectedNurses = getRandomStaff(deptNurses, 2);
+const deptShifts = department.shifts;
+const eligibleDoctors = shuffle(
+  staffList.filter(
+    (s) => s.role === "doctor" && s.departments.includes(department.name)
+  )
+);
+const eligibleNurses = shuffle(
+  staffList.filter(
+    (s) => s.role === "nurse" && s.departments.includes(department.name)
+  )
+);
 
-        assignments.push({
-          department: dept.name,
-          day,
-          shift,
-          doctors: selectedDoctors,
-          nurses: selectedNurses,
-        });
-      }
-    }
+let docIndex = 0;
+let nurseIndex = 0;
+
+for (const shift of deptShifts) {
+  // Pick the doctor with the fewest assignments
+  eligibleDoctors.sort(
+    (a, b) =>
+      countAssignments(assignments, a.id) -
+      countAssignments(assignments, b.id)
+  );
+  const assignedDoctor = eligibleDoctors[0];
+  if (assignedDoctor) {
+    assignments.push({
+      staffId: assignedDoctor.id,
+      department: department.name,
+      shift,
+      date: date.toISOString().split("T")[0],
+    });
   }
 
-  return assignments;
+  // Pick the nurse with the fewest assignments
+  eligibleNurses.sort(
+    (a, b) =>
+      countAssignments(assignments, a.id) -
+      countAssignments(assignments, b.id)
+  );
+  const assignedNurse = eligibleNurses[0];
+  if (assignedNurse) {
+    assignments.push({
+      staffId: assignedNurse.id,
+      department: department.name,
+      shift,
+      date: date.toISOString().split("T")[0],
+    });
+  }
 }
+
+}
+
+return assignments; }
+
