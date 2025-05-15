@@ -1,10 +1,10 @@
 import { Staff, Department, AssignedShift } from "./types";
 
-// Count existing assignments for each staff member const countAssignments = (assignments: AssignedShift[], staffId: string) => { return assignments.filter((a) => a.staffId === staffId).length; };
+const countAssignments = (assignments: AssignedShift[], staffId: string) => { return assignments.filter((a) => a.staffId === staffId).length; };
 
-// Shuffle an array randomly (for fairness) const shuffle = <T,>(array: T[]): T[] => { return [...array].sort(() => Math.random() - 0.5); };
+const shuffle = <T,>(array: T[]): T[] => { return [...array].sort(() => Math.random() - 0.5); };
 
-// Distribute shifts fairly export function distributeShifts( staffList: Staff[], departments: Department[], date: Date ): AssignedShift[] { const assignments: AssignedShift[] = []; const dayName = date.toLocaleDateString("en-US", { weekday: "long" });
+export function distributeShifts( staffList: Staff[], departments: Department[], date: Date ): AssignedShift[] { const assignments: AssignedShift[] = []; const dayName = date.toLocaleDateString("en-US", { weekday: "long" });
 
 for (const department of departments) { if (!department.workdays.includes(dayName)) continue;
 
@@ -24,7 +24,6 @@ let docIndex = 0;
 let nurseIndex = 0;
 
 for (const shift of deptShifts) {
-  // Pick the doctor with the fewest assignments
   eligibleDoctors.sort(
     (a, b) =>
       countAssignments(assignments, a.id) -
@@ -40,7 +39,6 @@ for (const shift of deptShifts) {
     });
   }
 
-  // Pick the nurse with the fewest assignments
   eligibleNurses.sort(
     (a, b) =>
       countAssignments(assignments, a.id) -
