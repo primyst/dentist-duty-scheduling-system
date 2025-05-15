@@ -16,7 +16,7 @@ export default function StaffPage() {
   const router = useRouter();
 
   useEffect(() => {
-    const staffId = Cookies.get("staffId"); // 👈 this should be set during login for staff
+    const staffId = Cookies.get("staffId");
     if (!staffId) {
       router.push("/");
       return;
