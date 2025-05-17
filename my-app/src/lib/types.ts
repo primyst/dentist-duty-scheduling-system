@@ -1,9 +1,7 @@
-export type Role = "doctor" | "nurse";
-
 export interface Staff {
   id: string;
   name: string;
-  role: Role;
+  role: "doctor" | "nurse";
   departments: string[];
 }
 
@@ -13,20 +11,10 @@ export interface Department {
   shifts: string[];
 }
 
-export interface ShiftAssignment {
+export interface AssignedShift {
+  date: string;
   department: string;
-  day: string;
   shift: string;
   doctors: Staff[];
   nurses: Staff[];
-}
-
-export interface ShiftSwapRequest {
-  id: string;
-  staffId: string;
-  department: string;
-  day: string;
-  shift: string;
-  reason: string;
-  status: "pending" | "approved" | "rejected";
 }

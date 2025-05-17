@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
-import { departments, getStaffByDepartment } from "@/lib/data";
+import { useEffect, useState } from "react";
 import { format } from "date-fns";
 import { DayPicker } from "react-day-picker";
 import "react-day-picker/dist/style.css";
 import { Clock, Stethoscope, Syringe } from "lucide-react";
+import { AssignedShift } from "@/lib/types";
+import { getAssignmentsFromSupabase } from "@/lib/supabase/assignments";
 
 const daysOfWeek = [
   "Sunday",
@@ -17,9 +18,37 @@ const daysOfWeek = [
   "Saturday",
 ];
 
+const departments = [
+  {
+    name: "Emergency",
+    workdays: [
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday",
+      "Saturday",
+      "Sunday",
+    ],
+  },
+  { name: "Surgery", workdays: ["Monday", "Wednesday", "Friday"] },
+  { name: "Pediatrics", workdays: ["Tuesday", "Thursday", "Saturday"] },
+];
+
 export default function ShiftScheduleViewer() {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [assignments, setAssignments] = useState<AssignedShift[]>([]);
   const selectedDay = daysOfWeek[selectedDate.getDay()];
+
+  useEffect(() => {
+    const fetchAssignments = async () => {
+      const formatted = selectedDate.toISOString().split("T")[0];
+      const data = await getAssignmentsFromSupabase(formatted);
+      setAssignments(data);
+    };
+
+    fetchAssignments();
+  }, [selectedDate]);
 
   return (
     <div className="p-4 md:p-8 md:ml-64 bg-gray-50 min-h-screen">
@@ -41,7 +70,13 @@ export default function ShiftScheduleViewer() {
         {departments
           .filter((dept) => dept.workdays.includes(selectedDay))
           .map((dept) => {
-            const staff = getStaffByDepartment(dept.name);
+            const deptAssignments = assignments.filter(
+              (a) => a.department === dept.name
+            );
+
+            const uniqueShifts = [
+              ...new Set(deptAssignments.map((a) => a.shift)),
+            ];
 
             return (
               <div
@@ -52,24 +87,34 @@ export default function ShiftScheduleViewer() {
                   {dept.name}
                 </h3>
 
-                {dept.shifts.map((shift, idx) => (
-                  <div
-                    key={idx}
-                    className="border rounded p-3 mb-3 bg-gray-100"
-                  >
-                    <p className="flex items-center gap-2 text-sm text-gray-700 font-medium mb-1">
-                      <Clock className="w-4 h-4" /> {shift}
-                    </p>
-                    <p className="flex items-center gap-2 text-sm text-blue-700">
-                      <Stethoscope className="w-4 h-4" />
-                      {staff.doctors.map((d) => d.name).join(", ")}
-                    </p>
-                    <p className="flex items-center gap-2 text-sm text-green-700">
-                      <Syringe className="w-4 h-4" />
-                      {staff.nurses.map((n) => n.name).join(", ")}
-                    </p>
-                  </div>
-                ))}
+                {uniqueShifts.map((shift, idx) => {
+                  const shiftData = deptAssignments.find(
+                    (a) => a.shift === shift
+                  );
+
+                  return (
+                    <div
+                      key={idx}
+                      className="border rounded p-3 mb-3 bg-gray-100"
+                    >
+                      <p className="flex items-center gap-2 text-sm text-gray-700 font-medium mb-1">
+                        <Clock className="w-4 h-4" /> {shift}
+                      </p>
+                      <p className="flex items-center gap-2 text-sm text-blue-700">
+                        <Stethoscope className="w-4 h-4" />
+                        {shiftData?.doctors
+                          ?.map((d) => (typeof d === "string" ? d : d.name))
+                          .join(", ") || "Unassigned"}
+                      </p>
+                      <p className="flex items-center gap-2 text-sm text-green-700">
+                        <Syringe className="w-4 h-4" />
+                        {shiftData?.nurses
+                          ?.map((n) => (typeof n === "string" ? n : n.name))
+                          .join(", ") || "Unassigned"}
+                      </p>
+                    </div>
+                  );
+                })}
               </div>
             );
           })}
