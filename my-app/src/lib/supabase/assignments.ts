@@ -1,4 +1,4 @@
-import { supabase } from "./client";
+import { supabase } from "@/lib/supabase";
 import { AssignedShift } from "@/lib/types";
 
 export const getAssignmentsFromSupabase = async (
