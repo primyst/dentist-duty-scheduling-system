@@ -4,40 +4,44 @@ import { useEffect, useState } from "react";
 import { DayPicker } from "react-day-picker";
 import { format } from "date-fns";
 import "react-day-picker/dist/style.css";
-import { assignShiftsFairly, getAssignmentsForDate } from "@/lib/utils";
-import { departments } from "@/lib/data";
-import { supabase } from "@/lib/supabase"; // path to your client.ts
-import { AssignedShift } from "@/lib/types";
+import { assignShiftsFairly } from "@/lib/utils"; // Should accept real staff data now
+import { supabase } from "@/lib/supabase";
+import { AssignedShift, Staff } from "@/lib/types";
 
 export default function AdminPage() {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [assignments, setAssignments] = useState<AssignedShift[]>([]);
+  const [staff, setStaff] = useState<Staff[]>([]);
   const [loading, setLoading] = useState(false);
 
   const formattedDate = format(selectedDate, "yyyy-MM-dd");
 
   const fetchAssignments = async () => {
-    setLoading(true);
     const { data, error } = await supabase
       .from("shift_assignments")
       .select("*")
       .eq("date", formattedDate);
 
-    if (!error && data) {
-      setAssignments(data);
-    } else {
-      setAssignments([]);
-    }
-    setLoading(false);
+    if (!error && data) setAssignments(data);
+    else setAssignments([]);
+  };
+
+  const fetchStaff = async () => {
+    const { data, error } = await supabase.from("staff").select("*");
+    if (!error && data) setStaff(data);
+    else alert("Failed to load staff data.");
   };
 
   const handleGenerate = async () => {
     setLoading(true);
 
-    // Step 1: Generate new assignments
+    // Step 1: Group staff by department and role
+    const departments = groupStaffByDepartment(staff);
+
+    // Step 2: Generate new assignments
     const newAssignments = assignShiftsFairly(departments, selectedDate, []);
 
-    // Step 2: Insert into Supabase
+    // Step 3: Save to Supabase
     const { error } = await supabase
       .from("shift_assignments")
       .insert(newAssignments);
@@ -57,6 +61,10 @@ export default function AdminPage() {
     fetchAssignments();
   }, [selectedDate]);
 
+  useEffect(() => {
+    fetchStaff();
+  }, []);
+
   return (
     <div className="p-4 md:p-8 md:ml-64 min-h-screen bg-gray-50">
       <h2 className="text-2xl font-bold mb-4 text-center">
@@ -74,7 +82,7 @@ export default function AdminPage() {
       <div className="flex justify-center mb-4">
         <button
           onClick={handleGenerate}
-          disabled={loading}
+          disabled={loading || staff.length === 0}
           className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-md"
         >
           {loading ? "Processing..." : "Generate & Save Shifts"}
@@ -100,4 +108,22 @@ export default function AdminPage() {
       )}
     </div>
   );
+}
+
+// Helper to group staff into departments with roles
+function groupStaffByDepartment(staff: Staff[]) {
+  const grouped: Record<string, { doctors: string[]; nurses: string[] }> = {};
+
+  for (const person of staff) {
+    if (!grouped[person.department]) {
+      grouped[person.department] = { doctors: [], nurses: [] };
+    }
+    if (person.role === "doctor") {
+      grouped[person.department].doctors.push(person.name);
+    } else if (person.role === "nurse") {
+      grouped[person.department].nurses.push(person.name);
+    }
+  }
+
+  return grouped;
 }
