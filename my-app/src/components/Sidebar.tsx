@@ -7,6 +7,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { Menu, X } from "lucide-react";
 import clsx from "clsx";
+import Image from "next/image";
 
 const links = [
   { href: "/", label: "Home" },
@@ -41,7 +42,7 @@ export default function Sidebar() {
       >
         {/* Sidebar header for mobile */}
         <div className="flex items-center gap-2 mb-4">
-          <img src="/lautech.png" className="w-6" alt="" />
+          <Image src="/lautech.png" className="w-6" alt="" />
           <h1 className="font-bold uppercase text-xs md:text-sm lg:text-base">lautech medschedule</h1>
         </div>
 
