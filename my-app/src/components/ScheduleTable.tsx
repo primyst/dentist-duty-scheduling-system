@@ -1,15 +1,16 @@
-'use client';
+"use client";
 
-import { FC } from 'react';
-import { department, staff } from '@/lib/data';
-import { Role } from '@/lib/types';
+import { FC } from "react";
+import { department, staff } from "@/lib/data";
+import { Stethoscope, Syringe } from "lucide-react";
+import { Role } from "@/lib/types";
 
 interface Props {
   date: Date | null;
 }
 
 const getDayName = (date: Date) => {
-  return date.toLocaleDateString('en-US', { weekday: 'long' });
+  return date.toLocaleDateString("en-US", { weekday: "long" });
 };
 
 const ScheduleTable: FC<Props> = ({ date }) => {
@@ -18,60 +19,71 @@ const ScheduleTable: FC<Props> = ({ date }) => {
   const dayName = getDayName(date);
 
   return (
-    <div className="space-y-6">
+    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
       {department.map((dept) => {
         if (!dept.workdays.includes(dayName)) return null;
 
         return (
-          <div key={dept.name} className="border rounded-md shadow-md p-4">
-            <h2 className="text-xl font-semibold text-blue-600">{dept.name}</h2>
+          <div key={dept.name} className="bg-white rounded-xl shadow-md p-4">
+            <h2 className="text-lg font-bold text-blue-700">{dept.name}</h2>
+
             {dept.time.length > 0 ? (
               dept.time.map((shiftTime) => {
                 const assignedDoctors = staff
                   .filter(
                     (s) =>
-                      s.department.name === dept.name && s.role === 'doctor'
+                      s.department.name === dept.name && s.role === "doctor"
                   )
                   .map((d) => d.name);
 
                 const assignedNurses = staff
                   .filter(
-                    (s) =>
-                      s.department.name === dept.name && s.role === 'nurse'
+                    (s) => s.department.name === dept.name && s.role === "nurse"
                   )
                   .map((n) => n.name);
 
                 return (
-                  <div key={shiftTime} className="mt-4">
-                    <p className="font-medium text-gray-700">{shiftTime}</p>
-                    <div className="ml-4 mt-2">
-                      <p className="text-sm font-semibold">Doctors:</p>
-                      {assignedDoctors.length ? (
-                        assignedDoctors.map((doc) => (
-                          <p key={doc} className="ml-2 text-sm text-gray-600">
-                            {doc}
-                          </p>
-                        ))
-                      ) : (
-                        <p className="ml-2 text-sm text-gray-400">None</p>
-                      )}
+                  <div key={shiftTime} className="mt-4 border-t pt-3">
+                    <p className="font-medium text-gray-800">{shiftTime}</p>
 
-                      <p className="text-sm font-semibold mt-2">Nurses:</p>
-                      {assignedNurses.length ? (
-                        assignedNurses.map((nurse) => (
-                          <p key={nurse} className="ml-2 text-sm text-gray-600">
-                            {nurse}
-                          </p>
-                        ))
+                    <div className="mt-2">
+                      <div className="flex items-center gap-2 text-blue-600 font-medium">
+                        <Stethoscope className="w-4 h-4" />
+                        Doctors
+                      </div>
+                      {assignedDoctors.length ? (
+                        <ul className="ml-6 list-disc text-sm text-gray-700">
+                          {assignedDoctors.map((doc) => (
+                            <li key={doc}>{doc}</li>
+                          ))}
+                        </ul>
                       ) : (
-                        <p className="ml-2 text-sm text-gray-400">None</p>
+                        <p className="ml-6 text-sm text-gray-400">None</p>
+                      )}
+                    </div>
+
+                    <div className="mt-2">
+                      <div className="flex items-center gap-2 text-green-600 font-medium">
+                        <Syringe className="w-4 h-4" />
+                        Nurses
+                      </div>
+                      {assignedNurses.length ? (
+                        <ul className="ml-6 list-disc text-sm text-gray-700">
+                          {assignedNurses.map((nurse) => (
+                            <li key={nurse}>{nurse}</li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p className="ml-6 text-sm text-gray-400">None</p>
                       )}
                     </div>
                   </div>
                 );
               })
             ) : (
-              <p className="text-sm italic text-gray-400 mt-2">No shifts listed</p>
+              <p className="text-sm italic text-gray-400 mt-2">
+                No shifts listed
+              </p>
             )}
           </div>
         );

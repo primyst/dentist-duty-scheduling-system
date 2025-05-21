@@ -1,9 +1,11 @@
+// layout.tsx
 import "./globals.css";
-import Navbar from "@/components/Navbar";
+import Navbar from "@/components/Sidebar";
+import Sidebar from "@/components/Sidebar";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Qudus Lautech Medical Dutites Scheduling App",
+  title: "Qudus Lautech Medical Duties Scheduling App",
   description:
     "Manage shifts for doctors and nurses, developed by Abdullateef Abdulqudus",
 };
@@ -16,8 +18,17 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="bg-gray-100">
-        <Navbar />
-        <main className="p-6">{children}</main>
+        <div className="flex min-h-screen">
+          
+          <aside className="hidden lg:block w-64 bg-white shadow-lg">
+            <Sidebar />
+          </aside>
+
+          <div className="flex-1">
+            <Sidebar />
+            <main className="p-6">{children}</main>
+          </div>
+        </div>
       </body>
     </html>
   );
