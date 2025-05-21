@@ -5,7 +5,7 @@ import { Calendar, RefreshCcw } from "lucide-react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { staff, swapRequests } from "@/lib/data";
-import { Staff, Swap } from "@/lib/types";
+import { Staff } from "@/lib/types";
 
 export default function RequestPage() {
   const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
