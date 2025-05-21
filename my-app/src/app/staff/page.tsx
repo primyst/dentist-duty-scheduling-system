@@ -73,7 +73,7 @@ export default function StaffPage() {
           </>
         ) : (
           <p className="text-gray-500 italic">
-            You're not scheduled to work on {dayName}.
+            You&apos;re not scheduled to work on {dayName}.
           </p>
         )}
       </section>
