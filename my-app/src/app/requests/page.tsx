@@ -1,35 +1,32 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
+import { Calendar, RefreshCcw } from "lucide-react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { Calendar } from "lucide-react";
-import { staff } from "@/lib/data";
-import { Staff } from "@/lib/types";
+import { staff, swapRequests } from "@/lib/data";
+import { Staff, Swap } from "@/lib/types";
 
-export default function StaffPage() {
+export default function RequestPage() {
   const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
   const [staffMember, setStaffMember] = useState<Staff | null>(null);
 
-  const staffId = "staff11"; // replace with real auth later
+  const staffId = "staff11"; // Simulated login
 
   useEffect(() => {
     const found = staff.find((s) => s.id === staffId);
     setStaffMember(found || null);
   }, []);
 
-  const getDayName = (date: Date) =>
-    date.toLocaleDateString("en-US", { weekday: "long" });
+  if (!staffMember || !selectedDate) return <p className="p-4">Loading...</p>;
 
-  if (!staffMember || !selectedDate) return <p>Loading...</p>;
-
-  const { department, name, role } = staffMember;
-  const dayName = getDayName(selectedDate);
-  const isWorking = department.workdays.includes(dayName);
+  const requestsForUser = swapRequests.filter(
+    (req) => req.to === staffMember.name
+  );
 
   return (
     <main className="p-4 max-w-3xl mx-auto">
-      <h1 className="text-2xl font-bold mb-6">Welcome, {name}</h1>
+      <h1 className="text-2xl font-bold mb-6">Shift Requests</h1>
 
       <div className="flex items-center gap-2 mb-6">
         <Calendar className="w-5 h-5 text-blue-600" />
@@ -41,40 +38,43 @@ export default function StaffPage() {
         />
       </div>
 
-      <section className="bg-white rounded-md shadow-md p-6">
-        <h2 className="text-xl font-semibold text-blue-700 mb-4">
-          {department.name} Department
-        </h2>
-
-        {isWorking ? (
-          <>
-            <p className="mb-4">
-              <strong>Role:</strong> <span className="capitalize">{role}</span>
-            </p>
-            <p className="mb-4">
-              <strong>Day:</strong> {dayName}
-            </p>
-
-            <div className="space-y-4">
-              {department.time.length > 0 ? (
-                department.time.map((shift) => (
-                  <div
-                    key={shift}
-                    className="border rounded-md p-4 shadow-sm bg-blue-50"
-                  >
-                    <p className="font-semibold text-blue-800 mb-1">Shift:</p>
-                    <p className="text-gray-700">{shift}</p>
-                  </div>
-                ))
-              ) : (
-                <p className="text-gray-500 italic">No shifts available</p>
-              )}
+      <section className="space-y-4">
+        {requestsForUser.length > 0 ? (
+          requestsForUser.map((req, index) => (
+            <div
+              key={index}
+              className="bg-white border rounded-lg shadow p-4 flex flex-col gap-2"
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-blue-700 font-semibold">
+                    {req.department} Department
+                  </h2>
+                  <p className="text-sm text-gray-600">Shift: {req.shift}</p>
+                </div>
+                <RefreshCcw className="text-blue-500 w-5 h-5" />
+              </div>
+              <p className="text-sm text-gray-700">
+                <strong>From:</strong> {req.requesterName}
+              </p>
+              <p className="text-sm text-gray-700">
+                <strong>To:</strong> {req.to}
+              </p>
+              <p
+                className={`text-sm font-medium ${
+                  req.status === "Pending"
+                    ? "text-yellow-600"
+                    : req.status === "Approved"
+                    ? "text-green-600"
+                    : "text-red-600"
+                }`}
+              >
+                Status: {req.status}
+              </p>
             </div>
-          </>
+          ))
         ) : (
-          <p className="text-gray-500 italic">
-            You're not scheduled to work on {dayName}.
-          </p>
+          <p className="text-gray-500 italic">No shift swap requests found.</p>
         )}
       </section>
     </main>

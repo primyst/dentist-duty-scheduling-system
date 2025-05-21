@@ -25,6 +25,7 @@ export interface Swap {
   id: string;
   requesterId: string;
   requesterName: string;
+  to: string;
   department: string;
   day: string;
   shift: string;
