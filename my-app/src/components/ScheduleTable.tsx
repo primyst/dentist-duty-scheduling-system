@@ -3,7 +3,6 @@
 import { FC } from "react";
 import { department, staff } from "@/lib/data";
 import { Stethoscope, Syringe } from "lucide-react";
-import { Role } from "@/lib/types";
 
 interface Props {
   date: Date | null;
