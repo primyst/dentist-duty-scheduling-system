@@ -11,8 +11,7 @@ export default function StaffPage() {
   const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
   const [staffMember, setStaffMember] = useState<Staff | null>(null);
 
-  // For now, simulate login with a staff ID
-  const staffId = "staff11"; // You can later replace this with real auth
+  const staffId = "staff11"; // replace with real auth later
 
   useEffect(() => {
     const found = staff.find((s) => s.id === staffId);
@@ -26,12 +25,11 @@ export default function StaffPage() {
 
   const { department, name, role } = staffMember;
   const dayName = getDayName(selectedDate);
-
   const isWorking = department.workdays.includes(dayName);
 
   return (
     <main className="p-4 max-w-3xl mx-auto">
-      <h1 className="text-2xl font-bold mb-4">Welcome, {name}</h1>
+      <h1 className="text-2xl font-bold mb-6">Welcome, {name}</h1>
 
       <div className="flex items-center gap-2 mb-6">
         <Calendar className="w-5 h-5 text-blue-600" />
@@ -43,30 +41,39 @@ export default function StaffPage() {
         />
       </div>
 
-      <section className="border rounded-md p-4 shadow-sm">
-        <h2 className="text-lg font-semibold text-blue-600 mb-2">
+      <section className="bg-white rounded-md shadow-md p-6">
+        <h2 className="text-xl font-semibold text-blue-700 mb-4">
           {department.name} Department
         </h2>
+
         {isWorking ? (
           <>
-            <p className="mb-2">
-              <strong>Role:</strong> {role}
+            <p className="mb-4">
+              <strong>Role:</strong> <span className="capitalize">{role}</span>
             </p>
-            <p className="mb-2">
+            <p className="mb-4">
               <strong>Day:</strong> {dayName}
             </p>
-            <p className="mb-2">
-              <strong>Assigned Shift(s):</strong>
-            </p>
-            <ul className="list-disc ml-6 text-gray-700">
-              {department.time.map((t) => (
-                <li key={t}>{t}</li>
-              ))}
-            </ul>
+
+            <div className="space-y-4">
+              {department.time.length > 0 ? (
+                department.time.map((shift) => (
+                  <div
+                    key={shift}
+                    className="border rounded-md p-4 shadow-sm bg-blue-50"
+                  >
+                    <p className="font-semibold text-blue-800 mb-1">Shift:</p>
+                    <p className="text-gray-700">{shift}</p>
+                  </div>
+                ))
+              ) : (
+                <p className="text-gray-500 italic">No shifts available</p>
+              )}
+            </div>
           </>
         ) : (
           <p className="text-gray-500 italic">
-            You’re not scheduled to work on {dayName}.
+            You're not scheduled to work on {dayName}.
           </p>
         )}
       </section>

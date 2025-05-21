@@ -20,3 +20,13 @@ export interface ShiftAssignment {
     doctors: string
     nurses: string
 }
+
+export interface Swap {
+  id: string;
+  requesterId: string;
+  requesterName: string;
+  department: string;
+  day: string;
+  shift: string;
+  status: "Pending" | "Approved" | "Rejected";
+}

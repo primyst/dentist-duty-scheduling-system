@@ -1,4 +1,5 @@
 import { Department, Staff } from "./types";
+import { Swap } from "./types";
 
 export const department: Department[] = [
   {
@@ -108,3 +109,25 @@ export const staff: Staff[] = [
     department: department[4],
   },
 ];
+
+export const swapRequests: Swap[] = [
+  {
+    id: "swap001",
+    requesterId: "staff11",
+    requesterName: "Dr. Ayo",
+    department: "Emergency",
+    day: "Monday",
+    shift: "6:00am - 4:00pm",
+    status: "Pending",
+  },
+  {
+    id: "swap002",
+    requesterId: "staff4",
+    requesterName: "Nurse Fatima",
+    department: "Pediatrics",
+    day: "Tuesday",
+    shift: "6:00am - 4:00pm",
+    status: "Approved",
+  },
+];
+

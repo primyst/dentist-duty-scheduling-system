@@ -1,96 +1,82 @@
 "use client";
 
-import { useState } from "react";
-import { generateShiftAssignments } from "@/lib/utils";
-import { ShiftAssignment, ShiftSwapRequest } from "@/lib/types";
+import { useState, useEffect } from "react";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+import { Calendar } from "lucide-react";
+import { staff } from "@/lib/data";
+import { Staff } from "@/lib/types";
 
-const currentUserId = "n1"; // Simulating Nurse Daniel
+export default function StaffPage() {
+  const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
+  const [staffMember, setStaffMember] = useState<Staff | null>(null);
 
-export default function RequestsPage() {
-  const [requests, setRequests] = useState<ShiftSwapRequest[]>([]);
-  const [reason, setReason] = useState("");
-  const schedule = generateShiftAssignments();
+  const staffId = "staff11"; // replace with real auth later
 
-  const myShifts = schedule.filter(
-    (s) =>
-      s.nurses.some((n) => n.id === currentUserId) ||
-      s.doctors.some((d) => d.id === currentUserId)
-  );
+  useEffect(() => {
+    const found = staff.find((s) => s.id === staffId);
+    setStaffMember(found || null);
+  }, []);
 
-  function handleRequestSubmit(shift: ShiftAssignment) {
-    if (!reason.trim()) return;
+  const getDayName = (date: Date) =>
+    date.toLocaleDateString("en-US", { weekday: "long" });
 
-    const newRequest: ShiftSwapRequest = {
-      id: Date.now().toString(),
-      staffId: currentUserId,
-      department: shift.department,
-      day: shift.day,
-      shift: shift.shift,
-      reason,
-      status: "pending",
-    };
+  if (!staffMember || !selectedDate) return <p>Loading...</p>;
 
-    setRequests([newRequest, ...requests]);
-    setReason("");
-  }
+  const { department, name, role } = staffMember;
+  const dayName = getDayName(selectedDate);
+  const isWorking = department.workdays.includes(dayName);
 
   return (
-    <main className="p-6">
-      <h1 className="text-2xl font-bold mb-4">Shift Swap Requests</h1>
+    <main className="p-4 max-w-3xl mx-auto">
+      <h1 className="text-2xl font-bold mb-6">Welcome, {name}</h1>
 
-      <h2 className="font-semibold mb-2">My Shifts</h2>
-      {myShifts.map((shift, i) => (
-        <div key={i} className="border p-4 rounded mb-3">
-          <p className="text-sm">
-            {shift.day} — {shift.shift}
+      <div className="flex items-center gap-2 mb-6">
+        <Calendar className="w-5 h-5 text-blue-600" />
+        <DatePicker
+          selected={selectedDate}
+          onChange={(date) => setSelectedDate(date)}
+          className="border px-3 py-2 rounded-md"
+          dateFormat="MMMM d, yyyy"
+        />
+      </div>
+
+      <section className="bg-white rounded-md shadow-md p-6">
+        <h2 className="text-xl font-semibold text-blue-700 mb-4">
+          {department.name} Department
+        </h2>
+
+        {isWorking ? (
+          <>
+            <p className="mb-4">
+              <strong>Role:</strong> <span className="capitalize">{role}</span>
+            </p>
+            <p className="mb-4">
+              <strong>Day:</strong> {dayName}
+            </p>
+
+            <div className="space-y-4">
+              {department.time.length > 0 ? (
+                department.time.map((shift) => (
+                  <div
+                    key={shift}
+                    className="border rounded-md p-4 shadow-sm bg-blue-50"
+                  >
+                    <p className="font-semibold text-blue-800 mb-1">Shift:</p>
+                    <p className="text-gray-700">{shift}</p>
+                  </div>
+                ))
+              ) : (
+                <p className="text-gray-500 italic">No shifts available</p>
+              )}
+            </div>
+          </>
+        ) : (
+          <p className="text-gray-500 italic">
+            You're not scheduled to work on {dayName}.
           </p>
-          <p className="font-medium">{shift.department}</p>
-          <textarea
-            className="w-full mt-2 p-2 border rounded"
-            placeholder="Reason for swap..."
-            value={reason}
-            onChange={(e) => setReason(e.target.value)}
-          />
-          <button
-            className="mt-2 px-4 py-1 bg-blue-600 text-white rounded"
-            onClick={() => handleRequestSubmit(shift)}
-          >
-            Submit Swap Request
-          </button>
-        </div>
-      ))}
-
-      <hr className="my-6" />
-
-      <h2 className="font-semibold mb-2">My Requests</h2>
-      {requests.length === 0 ? (
-        <p>No requests yet.</p>
-      ) : (
-        requests.map((r) => (
-          <div key={r.id} className="border p-4 rounded mb-2">
-            <p className="text-sm text-gray-500">
-              {r.day} — {r.shift} ({r.department})
-            </p>
-            <p>
-              <strong>Reason:</strong> {r.reason}
-            </p>
-            <p className="text-sm mt-1">
-              Status:{" "}
-              <span
-                className={
-                  r.status === "pending"
-                    ? "text-yellow-600"
-                    : r.status === "approved"
-                    ? "text-green-600"
-                    : "text-red-600"
-                }
-              >
-                {r.status}
-              </span>
-            </p>
-          </div>
-        ))
-      )}
+        )}
+      </section>
     </main>
   );
 }
