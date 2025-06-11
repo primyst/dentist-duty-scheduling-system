@@ -1,0 +1,18 @@
+{
+  "default_branch": "main",
+  "branches": [
+    "feature/admin-role",
+    "main",
+    "origin"
+  ],
+  "parent": {
+    "feature/admin-role": "main",
+    "main": null,
+    "origin": "main"
+  },
+  "order": [
+    "main",
+    "feature/admin-role",
+    "origin"
+  ]
+}
