@@ -42,7 +42,7 @@ export default function Sidebar() {
       >
         {/* Sidebar header for mobile */}
         <div className="flex items-center gap-2 mb-4">
-          <Image src="/lautech.png" className="w-6" alt="" />
+          <Image src="/lautech.png" width={40} height={40} alt="lautech logo" />
           <h1 className="font-bold uppercase text-xs md:text-sm lg:text-base">lautech medschedule</h1>
         </div>
 
