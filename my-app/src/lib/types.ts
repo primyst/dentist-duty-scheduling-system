@@ -14,11 +14,11 @@ export interface Staff {
 }
 
 export interface ShiftAssignment {
-    department: string
-    day: string
-    shift: string
-    doctors: string
-    nurses: string
+  department: string;
+  day: string;
+  shift: string;
+  doctors: string[];
+  nurses: string[];
 }
 
 export interface Swap {
