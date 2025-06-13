@@ -42,6 +42,8 @@ const ScheduleTable: FC<Props> = ({ date }) => {
       const generated = generateSchedule(department, staff, dateStr);
       setSchedule(generated);
 
+      console.log("Generated schedule:", generated);
+
       const { error: insertError } = await supabase
         .from("shift_assignment")
         .insert(generated);
