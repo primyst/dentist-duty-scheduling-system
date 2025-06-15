@@ -1,0 +1,20 @@
+const handleContinue = () => {
+  if (selectedRole === "admin" && validAdminIds.includes(userId)) {
+    setError("");
+    router.push("/dashboard");
+    return;
+  }
+
+  if (selectedRole === "staff") {
+    const matchedStaff = staff.find((s) => s.id === userId);
+
+    if (matchedStaff) {
+      setError("");
+      // Save staff info in localStorage
+      localStorage.setItem("loggedInStaff", JSON.stringify(matchedStaff));
+      router.push("/staff");
+    } else {
+      setError("Invalid ID for selected role");
+    }
+  }
+};

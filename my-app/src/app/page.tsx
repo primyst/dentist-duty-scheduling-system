@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { validAdminIds, validStaffIds } from "@/lib/data";
+import { validAdminIds, staff } from "@/lib/data";
 
 export default function HomePage() {
   const [selectedRole, setSelectedRole] = useState<"admin" | "staff" | null>(
@@ -13,17 +13,25 @@ export default function HomePage() {
   const router = useRouter();
 
   const handleContinue = () => {
-    const IsValid =
-      (selectedRole === "admin" && validAdminIds.includes(userId)) ||
-      (selectedRole === "staff" && validStaffIds.includes(userId));
-
-    if (IsValid) {
+    if (selectedRole === "admin" && validAdminIds.includes(userId)) {
       setError("");
-      router.push(selectedRole === "admin" ? "/dashboard" : "/staff");
-    } else {
-      setError("Invalid ID for selected role");
+      router.push("/dashboard");
+      return;
     }
-  };
+
+    if (selectedRole === "staff") {
+      const matchedStaff = staff.find((s) => s.id === userId);
+
+      if (matchedStaff) {
+        setError("");
+        // Save staff info in localStorage
+        localStorage.setItem("loggedInStaff", JSON.stringify(matchedStaff));
+        router.push("/staff");
+      } else {
+        setError("Invalid ID for selected role");
+      }
+    }
+  };  
 
   return (
     <main className="grid place-content-center place-items-center text-center w-full mx-auto lg:pl-24 px-4">

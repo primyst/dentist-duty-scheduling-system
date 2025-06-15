@@ -73,6 +73,31 @@ export const staff: Staff[] = [
     department: department[0],
   },
   {
+    id: "emerdoc005",
+    name: "Dr. Ubaydah",
+    role: "doctor",
+    department: department[0],
+  },
+  {
+    id: "emerdoc006",
+    name: "Dr. Bukunmi",
+    role: "doctor",
+    department: department[0],
+  },
+  {
+    id: "emerdoc007",
+    name: "Dr. Emmanuel",
+    role: "doctor",
+    department: department[0],
+  },
+  {
+    id: "emerdoc008",
+    name: "Dr. Banjo",
+    role: "doctor",
+    department: department[0],
+  },
+
+  {
     id: "emernur001",
     name: "Nurse Amao",
     role: "nurse",
@@ -93,6 +118,30 @@ export const staff: Staff[] = [
   {
     id: "emernur004",
     name: "Nurse Oyetunji",
+    role: "nurse",
+    department: department[0],
+  },
+  {
+    id: "emernur005",
+    name: "Nurse Durosinmi",
+    role: "nurse",
+    department: department[0],
+  },
+  {
+    id: "emernur006",
+    name: "Nurse Raji",
+    role: "nurse",
+    department: department[0],
+  },
+  {
+    id: "emernur007",
+    name: "Nurse Damilare",
+    role: "nurse",
+    department: department[0],
+  },
+  {
+    id: "emernur008",
+    name: "Nurse Habibat",
     role: "nurse",
     department: department[0],
   },
@@ -122,6 +171,31 @@ export const staff: Staff[] = [
     department: department[1],
   },
   {
+    id: "pedidoc005",
+    name: "Dr. Abdullateef",
+    role: "doctor",
+    department: department[1],
+  },
+  {
+    id: "pedidoc006",
+    name: "Dr. Adeoye",
+    role: "doctor",
+    department: department[1],
+  },
+  {
+    id: "pedidoc007",
+    name: "Dr. Furher",
+    role: "doctor",
+    department: department[1],
+  },
+  {
+    id: "pedidoc008",
+    name: "Dr. Sarafudeen",
+    role: "doctor",
+    department: department[1],
+  },
+
+  {
     id: "pedinur001",
     name: "Nurse Rahmat",
     role: "nurse",
@@ -142,6 +216,30 @@ export const staff: Staff[] = [
   {
     id: "pedinur004",
     name: "Nurse Ridwan",
+    role: "nurse",
+    department: department[1],
+  },
+  {
+    id: "pedinur005",
+    name: "Nurse Akinbola",
+    role: "nurse",
+    department: department[1],
+  },
+  {
+    id: "pedinur006",
+    name: "Nurse Sukurat",
+    role: "nurse",
+    department: department[1],
+  },
+  {
+    id: "pedinur007",
+    name: "Nurse Mubarak",
+    role: "nurse",
+    department: department[1],
+  },
+  {
+    id: "pedinur008",
+    name: "Nurse Titi",
     role: "nurse",
     department: department[1],
   },
@@ -171,6 +269,30 @@ export const staff: Staff[] = [
     department: department[2],
   },
   {
+    id: "surgdoc005",
+    name: "Dr. Adunni",
+    role: "doctor",
+    department: department[2],
+  },
+  {
+    id: "surgdoc006",
+    name: "Dr. Khadijah",
+    role: "doctor",
+    department: department[2],
+  },
+  {
+    id: "surgdoc007",
+    name: "Dr. Oyewale",
+    role: "doctor",
+    department: department[2],
+  },
+  {
+    id: "surgdoc008",
+    name: "Dr. Tola",
+    role: "doctor",
+    department: department[2],
+  },
+  {
     id: "surgnur001",
     name: "Nurse Funmi",
     role: "nurse",
@@ -191,6 +313,30 @@ export const staff: Staff[] = [
   {
     id: "surgnur004",
     name: "Nurse Grace",
+    role: "nurse",
+    department: department[2],
+  },
+  {
+    id: "surgnur005",
+    name: "Nurse Olaoye",
+    role: "nurse",
+    department: department[2],
+  },
+  {
+    id: "surgnur006",
+    name: "Nurse Gretta",
+    role: "nurse",
+    department: department[2],
+  },
+  {
+    id: "surgnur007",
+    name: "Nurse Tunde",
+    role: "nurse",
+    department: department[2],
+  },
+  {
+    id: "surgnur008",
+    name: "Nurse Stella",
     role: "nurse",
     department: department[2],
   },
@@ -220,6 +366,31 @@ export const staff: Staff[] = [
     department: department[3],
   },
   {
+    id: "matedoc005",
+    name: "Dr. Habeeb",
+    role: "doctor",
+    department: department[3],
+  },
+  {
+    id: "matedoc006",
+    name: "Dr. Shuhaib",
+    role: "doctor",
+    department: department[3],
+  },
+  {
+    id: "matedoc007",
+    name: "Dr. Olawale",
+    role: "doctor",
+    department: department[3],
+  },
+  {
+    id: "matedoc008",
+    name: "Dr. Mark",
+    role: "doctor",
+    department: department[3],
+  },
+
+  {
     id: "matenur001",
     name: "Nurse Yewande",
     role: "nurse",
@@ -240,6 +411,30 @@ export const staff: Staff[] = [
   {
     id: "matenur004",
     name: "Nurse Seun",
+    role: "nurse",
+    department: department[3],
+  },
+  {
+    id: "matenur005",
+    name: "Nurse Fawaz",
+    role: "nurse",
+    department: department[3],
+  },
+  {
+    id: "matenur006",
+    name: "Nurse Dawud",
+    role: "nurse",
+    department: department[3],
+  },
+  {
+    id: "matenur007",
+    name: "Nurse Bose",
+    role: "nurse",
+    department: department[3],
+  },
+  {
+    id: "matenur008",
+    name: "Nurse Usman",
     role: "nurse",
     department: department[3],
   },
@@ -269,6 +464,30 @@ export const staff: Staff[] = [
     department: department[4],
   },
   {
+    id: "radidoc005",
+    name: "Dr. Kudus",
+    role: "doctor",
+    department: department[4],
+  },
+  {
+    id: "radidoc006",
+    name: "Nurse TemiTope",
+    role: "doctor",
+    department: department[4],
+  },
+  {
+    id: "radidoc007",
+    name: "Dr. Chinedu",
+    role: "doctor",
+    department: department[4],
+  },
+  {
+    id: "radidoc008",
+    name: "Dr. Wale",
+    role: "doctor",
+    department: department[4],
+  },
+  {
     id: "radinur001",
     name: "Nurse Islammiyah",
     role: "nurse",
@@ -281,14 +500,38 @@ export const staff: Staff[] = [
     department: department[4],
   },
   {
-    id: "radinur001",
+    id: "radinur003",
     name: "Nurse Umar",
     role: "nurse",
     department: department[4],
   },
   {
-    id: "radinur001",
+    id: "radinur004",
     name: "Nurse Muiz",
+    role: "nurse",
+    department: department[4],
+  },
+  {
+    id: "radinur005",
+    name: "Nurse Israel",
+    role: "nurse",
+    department: department[4],
+  },
+  {
+    id: "radinur006",
+    name: "Nurse Ishaq",
+    role: "nurse",
+    department: department[4],
+  },
+  {
+    id: "radinur007",
+    name: "Nurse Ibrahim",
+    role: "nurse",
+    department: department[4],
+  },
+  {
+    id: "radinur008",
+    name: "Nurse Abdullahi",
     role: "nurse",
     department: department[4],
   },
@@ -316,4 +559,3 @@ export const swapRequests: Swap[] = [
     status: "Approved",
   },
 ];
-
