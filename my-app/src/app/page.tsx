@@ -24,7 +24,7 @@ export default function HomePage() {
 
       if (matchedStaff) {
         setError("");
-        // Save staff info in localStorage
+        
         localStorage.setItem("loggedInStaff", JSON.stringify(matchedStaff));
         router.push("/staff");
       } else {

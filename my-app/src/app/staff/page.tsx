@@ -1,82 +1,92 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import DatePicker from "react-datepicker";
-import "react-datepicker/dist/react-datepicker.css";
-import { Calendar } from "lucide-react";
+import { useEffect, useState } from "react";
+import { ShiftAssignment } from "@/lib/types";
 import { staff } from "@/lib/data";
-import { Staff } from "@/lib/types";
+import { supabase } from "@/lib/supabaseClient";
+import { Stethoscope, Syringe } from "lucide-react";
 
-export default function StaffPage() {
-  const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
-  const [staffMember, setStaffMember] = useState<Staff | null>(null);
-
-  const staffId = "staff11"; // replace with real auth later
+export default function StaffDashboard() {
+  const [schedule, setSchedule] = useState<ShiftAssignment[]>([]);
+  const [staffInfo, setStaffInfo] = useState<null | (typeof staff)[0]>(null);
+  const [date] = useState(new Date());
 
   useEffect(() => {
-    const found = staff.find((s) => s.id === staffId);
-    setStaffMember(found || null);
+    const storedStaff = localStorage.getItem("loggedInStaff");
+    if (storedStaff) {
+      setStaffInfo(JSON.parse(storedStaff));
+    }
   }, []);
 
-  const getDayName = (date: Date) =>
-    date.toLocaleDateString("en-US", { weekday: "long" });
+  useEffect(() => {
+    const fetchSchedule = async () => {
+      if (!staffInfo || !date) return;
 
-  if (!staffMember || !selectedDate) return <p>Loading...</p>;
+      const dateStr = date.toISOString().split("T")[0];
+      const { data, error } = await supabase
+        .from("shift_assignments")
+        .select("*")
+        .eq("day", dateStr)
+        .eq("department", staffInfo.department.name);
 
-  const { department, name, role } = staffMember;
-  const dayName = getDayName(selectedDate);
-  const isWorking = department.workdays.includes(dayName);
+      if (error) {
+        console.error("Failed to fetch schedule:", error.message);
+        return;
+      }
+
+      setSchedule(data || []);
+    };
+
+    fetchSchedule();
+  }, [staffInfo, date]);
+
+  if (!staffInfo) return <p>Loading...</p>;
 
   return (
-    <main className="p-4 max-w-3xl mx-auto">
-      <h1 className="text-2xl font-bold mb-6">Welcome, {name}</h1>
+    <div className="max-w-3xl mx-auto p-6">
+      <h1 className="text-2xl font-bold mb-4 text-gray-800">
+        Welcome, {staffInfo.name}
+      </h1>
+      <p className="text-gray-600 mb-6">
+        Here are your department's shifts for {date.toDateString()}
+      </p>
 
-      <div className="flex items-center gap-2 mb-6">
-        <Calendar className="w-5 h-5 text-blue-600" />
-        <DatePicker
-          selected={selectedDate}
-          onChange={(date) => setSelectedDate(date)}
-          className="border px-3 py-2 rounded-md"
-          dateFormat="MMMM d, yyyy"
-        />
-      </div>
+      {schedule.map((shift) => (
+        <div
+          key={shift.shift}
+          className="bg-white rounded-xl shadow-md p-4 mb-4"
+        >
+          <h2 className="text-blue-700 font-bold text-lg">
+            {shift.department} - {shift.shift}
+          </h2>
 
-      <section className="bg-white rounded-md shadow-md p-6">
-        <h2 className="text-xl font-semibold text-blue-700 mb-4">
-          {department.name} Department
-        </h2>
-
-        {isWorking ? (
-          <>
-            <p className="mb-4">
-              <strong>Role:</strong> <span className="capitalize">{role}</span>
-            </p>
-            <p className="mb-4">
-              <strong>Day:</strong> {dayName}
-            </p>
-
-            <div className="space-y-4">
-              {department.time.length > 0 ? (
-                department.time.map((shift) => (
-                  <div
-                    key={shift}
-                    className="border rounded-md p-4 shadow-sm bg-blue-50"
-                  >
-                    <p className="font-semibold text-blue-800 mb-1">Shift:</p>
-                    <p className="text-gray-700">{shift}</p>
-                  </div>
-                ))
-              ) : (
-                <p className="text-gray-500 italic">No shifts available</p>
-              )}
+          <div className="mt-3">
+            <div className="text-blue-600 font-medium flex items-center gap-2">
+              <Stethoscope className="w-4 h-4" />
+              Doctors
             </div>
-          </>
-        ) : (
-          <p className="text-gray-500 italic">
-            You&apos;re not scheduled to work on {dayName}.
-          </p>
-        )}
-      </section>
-    </main>
+            <ul className="ml-6 list-disc text-sm text-gray-700">
+              {shift.doctors.map((id) => {
+                const doc = staff.find((s) => s.id === id);
+                return <li key={id}>{doc?.name || "Unknown"}</li>;
+              })}
+            </ul>
+          </div>
+
+          <div className="mt-3">
+            <div className="text-green-600 font-medium flex items-center gap-2">
+              <Syringe className="w-4 h-4" />
+              Nurses
+            </div>
+            <ul className="ml-6 list-disc text-sm text-gray-700">
+              {shift.nurses.map((id) => {
+                const nurse = staff.find((s) => s.id === id);
+                return <li key={id}>{nurse?.name || "Unknown"}</li>;
+              })}
+            </ul>
+          </div>
+        </div>
+      ))}
+    </div>
   );
 }
