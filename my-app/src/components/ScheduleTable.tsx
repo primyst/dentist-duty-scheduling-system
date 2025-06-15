@@ -9,13 +9,14 @@ import { supabase } from "@/lib/supabaseClient";
 
 interface Props {
   date: Date | null;
+  onlyDepartment?: string;
 }
 
 const getDayName = (date: Date) => {
   return date.toLocaleDateString("en-US", { weekday: "long" });
 };
 
-const ScheduleTable: FC<Props> = ({ date }) => {
+const ScheduleTable: FC<Props> = ({ date, onlyDepartment }) => {
   const [schedule, setSchedule] = useState<ShiftAssignment[]>([]);
 
   useEffect(() => {
@@ -42,16 +43,12 @@ const ScheduleTable: FC<Props> = ({ date }) => {
       const generated = generateSchedule(department, staff, dateStr);
       setSchedule(generated);
 
-      console.log("Generated schedule:", generated);
-
       const { error: insertError } = await supabase
         .from("shift_assignment")
         .insert(generated);
 
       if (insertError) {
         console.error("Error saving schedule:", insertError.message);
-      } else {
-        console.log("Schedule saved successfully.");
       }
     };
 
@@ -59,13 +56,18 @@ const ScheduleTable: FC<Props> = ({ date }) => {
   }, [date]);
 
   if (!date) return null;
+
   const dayName = getDayName(date);
   const dateStr = date.toISOString().split("T")[0];
 
+  // Filter department list if `onlyDepartment` is passed (for staff)
+  const filteredDepartments = onlyDepartment
+    ? department.filter((d) => d.name === onlyDepartment)
+    : department;
+
   return (
     <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {" "}
-      {department.map((dept) => {
+      {filteredDepartments.map((dept) => {
         if (!dept.workdays.includes(dayName)) return null;
 
         return (
