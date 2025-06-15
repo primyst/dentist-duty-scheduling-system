@@ -24,14 +24,15 @@ export default function HomePage() {
 
       if (matchedStaff) {
         setError("");
-        
-        localStorage.setItem("loggedInStaff", JSON.stringify(matchedStaff));
+
+        // ✅ Save using the correct key
+        localStorage.setItem("staffInfo", JSON.stringify(matchedStaff));
         router.push("/staff");
       } else {
         setError("Invalid ID for selected role");
       }
     }
-  };  
+  };
 
   return (
     <main className="grid place-content-center place-items-center text-center w-full mx-auto lg:pl-24 px-4">
@@ -58,7 +59,7 @@ export default function HomePage() {
           className={`px-6 py-3 rounded-lg border ${
             selectedRole === "staff"
               ? "bg-green-600 text-white"
-              : "bg-white text-green-600"
+              : "bg-white text-green-600 border-green-600"
           }`}
           onClick={() => setSelectedRole("staff")}
         >
