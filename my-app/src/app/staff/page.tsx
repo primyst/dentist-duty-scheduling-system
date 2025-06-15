@@ -48,7 +48,7 @@ export default function StaffDashboard() {
         Welcome, {staffInfo.name}
       </h1>
       <p className="text-gray-600 mb-6">
-        Here are your department's shifts for {date.toDateString()}
+        Here are your department&rsquo;s shifts for {date.toDateString()}
       </p>
 
       {schedule.map((shift) => (
