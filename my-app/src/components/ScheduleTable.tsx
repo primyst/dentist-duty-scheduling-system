@@ -60,14 +60,13 @@ const ScheduleTable: FC<Props> = ({ date, onlyDepartment }) => {
   const dayName = getDayName(date);
   const dateStr = date.toISOString().split("T")[0];
 
-  // Filter department list if `onlyDepartment` is passed (for staff)
-  const filteredDepartments = onlyDepartment
+  const visibleDepartments = onlyDepartment
     ? department.filter((d) => d.name === onlyDepartment)
     : department;
 
   return (
     <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {filteredDepartments.map((dept) => {
+      {visibleDepartments.map((dept) => {
         if (!dept.workdays.includes(dayName)) return null;
 
         return (
