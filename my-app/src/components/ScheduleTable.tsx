@@ -60,9 +60,10 @@ const ScheduleTable: FC<Props> = ({ date, onlyDepartment }) => {
   const dayName = getDayName(date);
   const dateStr = date.toISOString().split("T")[0];
 
-  const visibleDepartments = onlyDepartment
+  const visibleDepartments = onlyDepartment && typeof onlyDepartment === "string"
   ? department.filter((d) => d.name.toLowerCase() === onlyDepartment.toLowerCase())
   : department;
+
 
   return (
     <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
