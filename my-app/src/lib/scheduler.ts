@@ -17,10 +17,8 @@ export function generateSchedule(
   for (const department of departments) {
     if (!department.workdays.includes(weekday)) continue;
 
-    // Properly filter staff who belong to this department
-    const deptStaff = staffList.filter(
-      (s) => s.department.name === department.name
-    );
+    // ✅ Filter staff by department string match
+    const deptStaff = staffList.filter((s) => s.department === department.name);
     const doctors = deptStaff.filter((s) => s.role === "doctor");
     const nurses = deptStaff.filter((s) => s.role === "nurse");
 
