@@ -1,5 +1,4 @@
 import { Department, Staff } from "./types";
-import { Swap } from "./types";
 
 export const department: Department[] = [
   {
