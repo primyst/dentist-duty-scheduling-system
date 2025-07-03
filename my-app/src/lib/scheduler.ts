@@ -17,7 +17,10 @@ export function generateSchedule(
   for (const department of departments) {
     if (!department.workdays.includes(weekday)) continue;
 
-    const deptStaff = staffList.filter((s) => s.department.name);
+    // Properly filter staff who belong to this department
+    const deptStaff = staffList.filter(
+      (s) => s.department.name === department.name
+    );
     const doctors = deptStaff.filter((s) => s.role === "doctor");
     const nurses = deptStaff.filter((s) => s.role === "nurse");
 
@@ -35,18 +38,18 @@ export function generateSchedule(
         (d) => (shiftCount[d.id] = (shiftCount[d.id] ?? 0) + 1)
       );
       assignedNurses.forEach(
-        (d) => (shiftCount[d.id] = (shiftCount[d.id] ?? 0) + 1)
-        );
-        
-        schedule.push({
-            department: department.name,
-            day: date,
-            shift,
-            doctors: assignedDoctors.map(d => d.id),
-            nurses: assignedNurses.map(n => n.id)
-        })
+        (n) => (shiftCount[n.id] = (shiftCount[n.id] ?? 0) + 1)
+      );
+
+      schedule.push({
+        department: department.name,
+        day: date,
+        shift,
+        doctors: assignedDoctors.map((d) => d.id),
+        nurses: assignedNurses.map((n) => n.id),
+      });
     }
-    }
-    
-    return schedule
+  }
+
+  return schedule;
 }
