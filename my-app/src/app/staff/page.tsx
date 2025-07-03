@@ -42,9 +42,9 @@ export default function StaffPage() {
       </div>
 
       <ScheduleTable
-        date={selectedDate}
-        onlyDepartment={staffInfo.department}
-      />
+  date={selectedDate}
+  onlyDepartment={staffInfo.department.name}
+/>
     </main>
   );
 }
