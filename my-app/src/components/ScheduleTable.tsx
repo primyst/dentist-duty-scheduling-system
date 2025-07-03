@@ -60,10 +60,13 @@ const ScheduleTable: FC<Props> = ({ date, onlyDepartment }) => {
   const dayName = getDayName(date);
   const dateStr = date.toISOString().split("T")[0];
 
-  const visibleDepartments = onlyDepartment && typeof onlyDepartment === "string"
-  ? department.filter((d) => d.name.toLowerCase() === onlyDepartment.toLowerCase())
+  const visibleDepartments = onlyDepartment
+  ? department.filter((d) => d.id === onlyDepartment)
   : department;
 
+  if (onlyDepartment && visibleDepartments.length === 0) {
+  return <p className="text-gray-500">No matching department found for your account.</p>;
+}
 
   return (
     <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
