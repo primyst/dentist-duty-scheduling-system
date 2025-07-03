@@ -9,7 +9,7 @@ export interface Department {
 export interface Staff {
   id: string;
   name: string;
-  department: Department;
+  department: string;
   role: Role;
 }
 
