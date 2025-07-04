@@ -8,7 +8,7 @@ import ScheduleTable from "@/components/ScheduleTable";
 
 import { generateWeeklySchedule } from "@/lib/scheduler";
 import { departments } from "@/lib/data";
-import { staff } from "@/lib/staff";
+import { staff } from "@/lib/data";
 import { format } from "date-fns";
 
 export default function DashboardPage() {
