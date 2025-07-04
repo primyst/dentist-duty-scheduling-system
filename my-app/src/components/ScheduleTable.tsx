@@ -30,20 +30,20 @@ const ScheduleTable: FC<Props> = ({ date, onlyDepartment, view }) => {
       }
 
       // Fetch any existing schedule from Supabase
-      const { data: existing, error: fetchError } = await supabase
-        .from("shift_assignment")
-        .select("*")
-        .in("day", dates);
+const { data: existing, error: fetchError } = await supabase
+  .from("shift_assignment")
+  .select("*")
+  .in("day", dates);
 
-      if (fetchError) {
-        console.error("Fetch error:", fetchError.message);
-        return;
-      }
+if (fetchError) {
+  console.error("Fetch error:", fetchError.message);
+  return;
+}
 
-      if (existing && existing.length === dates.length * department.length) {
-        setSchedule(existing);
-        return;
-      }
+if (existing && existing.length > 0) {
+  setSchedule(existing);
+  return;
+}
 
       // Generate weekly schedule if not complete
       const generated = generateWeeklySchedule(department, staff, date);
