@@ -48,7 +48,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Schedule Table */}
-      <ScheduleTable date={dailySchedule} />
+      <ScheduleTable date={selectedDate} view="daily" />
     </main>
   );
 }
