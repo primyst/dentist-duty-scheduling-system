@@ -17,13 +17,13 @@ export default function StaffPage() {
   const router = useRouter();
 
   useEffect(() => {
-    const stored = localStorage.getItem("staffInfo");
-    if (!stored) {
-      router.push("/");
-      return;
-    }
-    setStaffInfo(JSON.parse(stored));
-  }, []);
+  const stored = localStorage.getItem("staffInfo");
+  if (!stored) {
+    router.push("/");
+    return;
+  }
+  setStaffInfo(JSON.parse(stored));
+}, [router]);
 
   if (!staffInfo) return null;
 
