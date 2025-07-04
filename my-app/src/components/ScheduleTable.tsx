@@ -8,8 +8,9 @@ import { generateWeeklySchedule } from "@/lib/scheduler";
 import { supabase } from "@/lib/supabaseClient";
 
 interface Props {
-  date: Date | null; // Start date of the week
+  date: Date | null;
   onlyDepartment?: string;
+  view?: "weekly" | "daily";
 }
 
 const ScheduleTable: FC<Props> = ({ date, onlyDepartment }) => {
@@ -66,18 +67,23 @@ const ScheduleTable: FC<Props> = ({ date, onlyDepartment }) => {
     ? department.filter((d) => d.name.toLowerCase() === onlyDepartment.toLowerCase())
     : department;
 
-  const daysInWeek = [...Array(7)].map((_, i) => {
-    const d = new Date(date);
-    d.setDate(date.getDate() + i);
-    return {
-      name: d.toLocaleDateString("en-US", { weekday: "long" }),
-      dateStr: d.toISOString().split("T")[0],
-    };
-  });
+  const days = view === "daily"
+  ? [{
+      name: date.toLocaleDateString("en-US", { weekday: "long" }),
+      dateStr: date.toISOString().split("T")[0],
+    }]
+  : [...Array(7)].map((_, i) => {
+      const d = new Date(date);
+      d.setDate(date.getDate() + i);
+      return {
+        name: d.toLocaleDateString("en-US", { weekday: "long" }),
+        dateStr: d.toISOString().split("T")[0],
+      };
+    });
 
   return (
     <div className="space-y-10">
-      {daysInWeek.map(({ name, dateStr }) => (
+      {days.map(({ name, dateStr }) => (
         <div key={dateStr}>
           <h2 className="text-xl font-bold text-blue-800 mb-2">
             {name} – {dateStr}
