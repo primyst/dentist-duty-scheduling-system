@@ -36,6 +36,19 @@ export default function SwapRequestsPage() {
     fetchRequests();
   }, []);
 
+useEffect(() => {
+  const stored = localStorage.getItem("admin");
+  if (!stored) {
+    router.push("/"); // not an admin, send back
+    return;
+  }
+  const parsed = JSON.parse(stored);
+  if (parsed.role !== "admin") {
+    router.push("/"); // extra protection
+    return;
+  }
+}, []);
+
   // Update the status of a swap request
   const updateStatus = async (id: number, newStatus: "approved" | "rejected") => {
     const { error } = await supabase
