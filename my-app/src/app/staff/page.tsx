@@ -41,9 +41,10 @@ export default function StaffPage() {
         />
       </div>
 
-      <ScheduleTable
-  date={selectedDate}
-  onlyDepartment={staffInfo.department}
+      <ScheduleTable  
+  date={selectedDate}  
+  onlyDepartment={staffInfo.department}  
+  view="daily"  
 />
     </main>
   );
