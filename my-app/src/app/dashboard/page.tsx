@@ -18,7 +18,7 @@ export default function DashboardPage() {
     if (!selectedDate) return [];
     const startOfWeek = new Date(selectedDate);
     startOfWeek.setDate(selectedDate.getDate() - selectedDate.getDay()); // Sunday as week start
-    return generateWeeklySchedule(departments, staff, startOfWeek);
+    return generateWeeklySchedule(department, staff, startOfWeek);
   }, [selectedDate]);
 
   // Format selected date to "YYYY-MM-DD"
