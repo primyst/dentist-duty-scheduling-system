@@ -1,13 +1,37 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { Calendar } from "lucide-react";
 import ScheduleTable from "@/components/ScheduleTable";
 
+import { generateWeeklySchedule } from "@/lib/scheduler";
+import { departments } from "@/lib/data";
+import { staff } from "@/lib/staff";
+import { format } from "date-fns";
+
 export default function DashboardPage() {
   const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
+
+  // Generate weekly schedule ONCE (based on start of the selected week)
+  const weeklySchedule = useMemo(() => {
+    if (!selectedDate) return [];
+    const startOfWeek = new Date(selectedDate);
+    startOfWeek.setDate(selectedDate.getDate() - selectedDate.getDay()); // Sunday as week start
+    return generateWeeklySchedule(departments, staff, startOfWeek);
+  }, [selectedDate]);
+
+  // Format selected date to "YYYY-MM-DD"
+  const selectedDateString = useMemo(() => {
+    if (!selectedDate) return "";
+    return format(selectedDate, "yyyy-MM-dd");
+  }, [selectedDate]);
+
+  // Filter schedule to only show selected day's data
+  const dailySchedule = weeklySchedule.filter(
+    (s) => s.day === selectedDateString
+  );
 
   return (
     <main className="p-4 max-w-4xl mx-auto">
@@ -24,8 +48,8 @@ export default function DashboardPage() {
         />
       </div>
 
-      {/* Schedule View */}
-      <ScheduleTable date={selectedDate} />
+      {/* Schedule Table */}
+      <ScheduleTable schedule={dailySchedule} />
     </main>
   );
 }
