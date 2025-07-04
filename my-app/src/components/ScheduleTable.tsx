@@ -13,7 +13,7 @@ interface Props {
   view?: "weekly" | "daily";
 }
 
-const ScheduleTable: FC<Props> = ({ date, onlyDepartment }) => {
+const ScheduleTable: FC<Props> = ({ date, onlyDepartment, view }) => {
   const [schedule, setSchedule] = useState<ShiftAssignment[]>([]);
 
   useEffect(() => {
