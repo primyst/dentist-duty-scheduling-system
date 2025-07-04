@@ -13,20 +13,6 @@ import { format } from "date-fns";
 export default function DashboardPage() {
   const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
 
-  // Generate weekly schedule ONCE (based on start of the selected week)
-  const weeklySchedule = useMemo(() => {
-    if (!selectedDate) return [];
-    const startOfWeek = new Date(selectedDate);
-    startOfWeek.setDate(selectedDate.getDate() - selectedDate.getDay()); // Sunday as week start
-    return generateWeeklySchedule(department, staff, startOfWeek);
-  }, [selectedDate]);
-
-  // Format selected date to "YYYY-MM-DD"
-  const selectedDateString = useMemo(() => {
-    if (!selectedDate) return "";
-    return format(selectedDate, "yyyy-MM-dd");
-  }, [selectedDate]);
-
   return (
     <main className="p-4 max-w-4xl mx-auto">
       <h1 className="text-2xl font-bold mb-6">Admin Dashboard</h1>
