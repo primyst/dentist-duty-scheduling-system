@@ -20,11 +20,15 @@ export function generateSchedule(
     const doctors = deptStaff.filter((s) => s.role === "doctor");
     const nurses = deptStaff.filter((s) => s.role === "nurse");
 
-    const getLeastWorked = (list: Staff[], count: number) => {
-      return [...list]
-        .sort((a, b) => (shiftCount[a.id] ?? 0) - (shiftCount[b.id] ?? 0))
-        .slice(0, count);
-    };
+    function getLeastWorked(list: Staff[], count: number): Staff[] {
+  // Shuffle to break ties randomly
+  const shuffled = [...list].sort(() => Math.random() - 0.5);
+
+  // Then sort by least shifts
+  return shuffled
+    .sort((a, b) => (shiftCount[a.id] ?? 0) - (shiftCount[b.id] ?? 0))
+    .slice(0, count);
+}
 
     for (const shift of department.time) {
       const assignedDoctors = getLeastWorked(doctors, 2);
