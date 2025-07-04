@@ -7,23 +7,36 @@ export default function SwapForm({ requesterId }: { requesterId: string }) {
   const [requestedShift, setRequestedShift] = useState("");
   const [desiredDay, setDesiredDay] = useState("");
   const [desiredShift, setDesiredShift] = useState("");
+  const [reason, setReason] = useState(""); // ✅ new state
   const [message, setMessage] = useState("");
 
   const handleSubmit = async () => {
+    if (!requestedDay || !requestedShift || !desiredDay || !desiredShift || !reason.trim()) {
+      setMessage("Please fill in all fields.");
+      return;
+    }
+
     const { error } = await supabase.from("shift_swap_requests").insert({
       requester_id: requesterId,
       requested_day: requestedDay,
       requested_shift: requestedShift,
       desired_day: desiredDay,
       desired_shift: desiredShift,
+      reason, // ✅ include reason
       status: "pending",
     });
 
     if (error) {
-      setMessage("Failed to request swap.");
+      setMessage("❌ Failed to request swap.");
       console.error(error);
     } else {
-      setMessage("Swap request submitted!");
+      setMessage("✅ Swap request submitted!");
+      // Reset form
+      setRequestedDay("");
+      setRequestedShift("");
+      setDesiredDay("");
+      setDesiredShift("");
+      setReason("");
     }
   };
 
@@ -31,6 +44,7 @@ export default function SwapForm({ requesterId }: { requesterId: string }) {
     <div className="p-4 border rounded-lg shadow max-w-md space-y-4">
       <h2 className="text-lg font-bold">Request a Shift Swap</h2>
 
+      {/* Shift to give away */}
       <div>
         <label>My Shift (to give away)</label>
         <input
@@ -51,6 +65,7 @@ export default function SwapForm({ requesterId }: { requesterId: string }) {
         </select>
       </div>
 
+      {/* Desired Shift */}
       <div>
         <label>Desired Shift</label>
         <input
@@ -69,6 +84,18 @@ export default function SwapForm({ requesterId }: { requesterId: string }) {
           <option value="Afternoon">Afternoon</option>
           <option value="Night">Night</option>
         </select>
+      </div>
+
+      {/* Reason */}
+      <div>
+        <label>Reason for Swap</label>
+        <textarea
+          value={reason}
+          onChange={(e) => setReason(e.target.value)}
+          className="border px-2 py-1 w-full mt-1"
+          placeholder="Explain why you need this swap..."
+          rows={3}
+        />
       </div>
 
       <button
