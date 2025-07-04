@@ -7,17 +7,15 @@ function getWeekday(date: string): string {
 export function generateSchedule(
   departments: Department[],
   staffList: Staff[],
-  date: string
+  date: string,
+  shiftCount: Record<string, number> = {}
 ): ShiftAssignment[] {
   const schedule: ShiftAssignment[] = [];
   const weekday = getWeekday(date);
 
-  const shiftCount: Record<string, number> = {};
-
   for (const department of departments) {
     if (!department.workdays.includes(weekday)) continue;
 
-    // ✅ Filter staff by department string match
     const deptStaff = staffList.filter((s) => s.department === department.name);
     const doctors = deptStaff.filter((s) => s.role === "doctor");
     const nurses = deptStaff.filter((s) => s.role === "nurse");
@@ -50,4 +48,20 @@ export function generateSchedule(
   }
 
   return schedule;
+}
+
+export function generateMultiDaySchedule(
+  departments: Department[],
+  staffList: Staff[],
+  dates: string[]
+): ShiftAssignment[] {
+  const shiftCount: Record<string, number> = {};
+  let fullSchedule: ShiftAssignment[] = [];
+
+  for (const date of dates) {
+    const dailySchedule = generateSchedule(departments, staffList, date, shiftCount);
+    fullSchedule = [...fullSchedule, ...dailySchedule];
+  }
+
+  return fullSchedule;
 }
