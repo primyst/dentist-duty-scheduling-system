@@ -27,11 +27,6 @@ export default function DashboardPage() {
     return format(selectedDate, "yyyy-MM-dd");
   }, [selectedDate]);
 
-  // Filter schedule to only show selected day's data
-  const dailySchedule = weeklySchedule.filter(
-    (s) => s.day === selectedDateString
-  );
-
   return (
     <main className="p-4 max-w-4xl mx-auto">
       <h1 className="text-2xl font-bold mb-6">Admin Dashboard</h1>
