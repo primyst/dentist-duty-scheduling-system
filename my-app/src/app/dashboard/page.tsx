@@ -1,14 +1,10 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState} from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { Calendar } from "lucide-react";
 import ScheduleTable from "@/components/ScheduleTable";
-
-import { generateWeeklySchedule } from "@/lib/scheduler";
-import { department, staff } from "@/lib/data";
-import { format } from "date-fns";
 
 export default function DashboardPage() {
   const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
