@@ -6,6 +6,7 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import ScheduleTable from "@/components/ScheduleTable";
 import { Calendar } from "lucide-react";
+import SwapForm from "@/components/SwapForm";
 
 export default function StaffPage() {
   const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
@@ -17,21 +18,22 @@ export default function StaffPage() {
   const router = useRouter();
 
   useEffect(() => {
-  const stored = localStorage.getItem("staffInfo");
-  if (!stored) {
-    router.push("/");
-    return;
-  }
-  setStaffInfo(JSON.parse(stored));
-}, [router]);
+    const stored = localStorage.getItem("staffInfo");
+    if (!stored) {
+      router.push("/");
+      return;
+    }
+    setStaffInfo(JSON.parse(stored));
+  }, [router]);
 
   if (!staffInfo) return null;
 
   return (
-    <main className="p-4 max-w-3xl mx-auto">
-      <h1 className="text-xl font-bold mb-4">Welcome, {staffInfo.name} 👋</h1>
+    <main className="p-4 max-w-3xl mx-auto space-y-8">
+      <h1 className="text-xl font-bold">Welcome, {staffInfo.name} 👋</h1>
 
-      <div className="flex items-center gap-2 mb-6">
+      {/* Date Picker */}
+      <div className="flex items-center gap-2">
         <Calendar className="w-5 h-5 text-green-600" />
         <DatePicker
           selected={selectedDate}
@@ -41,11 +43,15 @@ export default function StaffPage() {
         />
       </div>
 
-      <ScheduleTable  
-  date={selectedDate}  
-  onlyDepartment={staffInfo.department}  
-  view="daily"  
-/>
+      {/* Daily schedule table */}
+      <ScheduleTable
+        date={selectedDate}
+        onlyDepartment={staffInfo.department}
+        view="daily"
+      />
+
+      {/* Shift Swap Request form */}
+      <SwapForm requesterId={staffInfo.id} />
     </main>
   );
 }
