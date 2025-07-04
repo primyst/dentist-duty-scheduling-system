@@ -65,3 +65,22 @@ export function generateMultiDaySchedule(
 
   return fullSchedule;
 }
+
+export function generateWeeklySchedule(
+  departments: Department[],
+  staffList: Staff[],
+  startDate: Date
+): ShiftAssignment[] {
+  const weeklySchedule: ShiftAssignment[] = [];
+  const shiftCount: Record<string, number> = {};
+
+  for (let i = 0; i < 7; i++) {
+    const currentDate = new Date(startDate);
+    currentDate.setDate(startDate.getDate() + i);
+
+    const daySchedule = generateSchedule(departments, staffList, currentDate.toISOString().split("T")[0], shiftCount);
+    weeklySchedule.push(...daySchedule);
+  }
+
+  return weeklySchedule;
+}
