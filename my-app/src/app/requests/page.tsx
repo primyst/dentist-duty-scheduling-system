@@ -17,6 +17,7 @@ interface SwapRequest {
 export default function SwapRequestsPage() {
   const [requests, setRequests] = useState<SwapRequest[]>([]);
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
 
   // Fetch all requests from the database on mount
   useEffect(() => {
