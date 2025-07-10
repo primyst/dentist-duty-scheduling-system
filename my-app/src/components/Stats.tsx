@@ -20,7 +20,7 @@ const getStaffCountByDepartment = () => {
   return result;
 };
 
-export default function Stats() {
+export default function Statspage() {
   const counts = getStaffCountByDepartment();
   const totalStaff = staff.length;
 
