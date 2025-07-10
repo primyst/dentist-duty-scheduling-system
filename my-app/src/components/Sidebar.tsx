@@ -14,7 +14,7 @@ const links = [
   { href: "/dashboard", label: "Admin Dashboard" },
   { href: "/staff", label: "My Schedule" },
   { href: "/requests", label: "Swap Requests" },
-  { href: "/stats", label: "Stats" },
+  { href: "/stats", label: "Stats Dashboard" },
 ];
 
 export default function Sidebar() {
