@@ -1,8 +1,11 @@
 import StatsPage from "@/components/Stats";
+import DepartmentStaffBarChart from "@/components/DepartmentStaffBarChart";
 
 export default function Stats() {
   return (
-<DepartmentStaffBarChart />
- <StatsPage />
-);
+    <main className="space-y-6 p-4">
+      <DepartmentStaffBarChart />
+      <StatsPage />
+    </main>
+  );
 }
