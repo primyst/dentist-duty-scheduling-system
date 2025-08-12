@@ -1,9 +1,6 @@
-"use client";
-
 import "./globals.css";
-import Sidebar from "@/components/Sidebar";
 import type { Metadata } from "next";
-import { usePathname } from "next/navigation";
+import AppShell from "@/components/AppShell";
 
 export const metadata: Metadata = {
   title: "Qudus Lautech Medical Duties Scheduling App",
@@ -11,29 +8,11 @@ export const metadata: Metadata = {
     "Manage shifts for doctors and nurses, developed by Abdullateef Abdulqudus",
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  const pathname = usePathname();
-  const hideSidebar = pathname === "/";
-
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className="bg-gray-100">
-        <div className="flex min-h-screen">
-          {!hideSidebar && (
-            <aside className="hidden lg:block w-64 bg-white shadow-lg">
-              <Sidebar />
-            </aside>
-          )}
-
-          <div className="flex-1">
-            {!hideSidebar && <Sidebar />}
-            <main className={isLoginPage ? "w-full" : "flex-1 ml-64"}>{children}</main>
-          </div>
-        </div>
+      <body>
+        <AppShell>{children}</AppShell>
       </body>
     </html>
   );
