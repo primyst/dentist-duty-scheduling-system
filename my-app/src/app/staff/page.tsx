@@ -51,7 +51,7 @@ export default function StaffPage() {
       />
 
       {/* Shift Swap Request form */}
-      <SwapForm requesterId={staffInfo.id} />
+<SwapForm requesterId={staffInfo.id} department={staffInfo.department} />
     </main>
   );
 }
