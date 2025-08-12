@@ -1,6 +1,7 @@
 import "./globals.css";
 import type { Metadata } from "next";
 import AppShell from "@/components/AppShell";
+import Sidebar from "@/components/Sidebar";
 
 export const metadata: Metadata = {
   title: "Qudus Lautech Medical Duties Scheduling App",
@@ -12,6 +13,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <body>
+        <Sidebar />
         <AppShell>{children}</AppShell>
       </body>
     </html>
