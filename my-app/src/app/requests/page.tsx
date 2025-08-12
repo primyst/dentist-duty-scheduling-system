@@ -12,20 +12,48 @@ interface SwapRequest {
   desired_day: string;
   desired_shift: string;
   status: "pending" | "approved" | "rejected";
+  department_id?: string;
 }
 
 export default function SwapRequestsPage() {
   const [requests, setRequests] = useState<SwapRequest[]>([]);
   const [loading, setLoading] = useState(true);
+  const [role, setRole] = useState<"admin" | "staff" | null>(null);
+  const [departmentId, setDepartmentId] = useState<string | null>(null);
   const router = useRouter();
 
-  // Fetch all requests from the database on mount
+  // Identify user role and department
   useEffect(() => {
+    const adminData = localStorage.getItem("admin");
+    const staffData = localStorage.getItem("staffInfo");
+
+    if (!adminData && !staffData) {
+      router.push("/"); // Not logged in
+      return;
+    }
+
+    if (adminData) {
+      const parsed = JSON.parse(adminData);
+      setRole("admin");
+    } else if (staffData) {
+      const parsed = JSON.parse(staffData);
+      setRole("staff");
+      setDepartmentId(parsed.departmentId); // Ensure staffInfo contains departmentId
+    }
+  }, []);
+
+  // Fetch requests based on role
+  useEffect(() => {
+    if (!role) return;
+
     const fetchRequests = async () => {
-      const { data, error } = await supabase
-        .from("shift_swap_requests")
-        .select("*")
-        .order("id", { ascending: false });
+      let query = supabase.from("shift_swap_requests").select("*").order("id", { ascending: false });
+
+      if (role === "staff" && departmentId) {
+        query = query.eq("department_id", departmentId);
+      }
+
+      const { data, error } = await query;
 
       if (error) {
         console.error("Error fetching requests:", error.message);
@@ -36,22 +64,9 @@ export default function SwapRequestsPage() {
     };
 
     fetchRequests();
-  }, []);
+  }, [role, departmentId]);
 
-useEffect(() => {
-  const stored = localStorage.getItem("admin");
-  if (!stored) {
-    router.push("/"); // not an admin, send back
-    return;
-  }
-  const parsed = JSON.parse(stored);
-  if (parsed.role !== "admin") {
-    router.push("/"); // extra protection
-    return;
-  }
-}, []);
-
-  // Update the status of a swap request
+  // Admin can update status
   const updateStatus = async (id: number, newStatus: "approved" | "rejected") => {
     const { error } = await supabase
       .from("shift_swap_requests")
@@ -63,18 +78,15 @@ useEffect(() => {
       return;
     }
 
-    // Reflect the new status in the local state
     setRequests((prev) =>
-      prev.map((r) =>
-        r.id === id ? { ...r, status: newStatus } : r
-      )
+      prev.map((r) => (r.id === id ? { ...r, status: newStatus } : r))
     );
   };
 
   return (
     <main className="p-6 max-w-4xl mx-auto">
       <h1 className="text-2xl font-bold mb-6 text-blue-800">
-        Shift Swap Requests (Admin)
+        Shift Swap Requests {role === "staff" && "(Your Department)"}
       </h1>
 
       {loading ? (
@@ -90,7 +102,8 @@ useEffect(() => {
               <p><strong>Wants:</strong> {req.desired_day} – {req.desired_shift}</p>
               <p><strong>Status:</strong> <span className="capitalize">{req.status}</span></p>
 
-              {req.status === "pending" && (
+              {/* Show action buttons only to admin */}
+              {role === "admin" && req.status === "pending" && (
                 <div className="mt-3 flex gap-3">
                   <button
                     onClick={() => updateStatus(req.id, "approved")}
