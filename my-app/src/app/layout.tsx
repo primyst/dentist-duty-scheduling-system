@@ -29,7 +29,7 @@ export default function RootLayout({
 
           <div className="flex-1">
             {!hideSidebar && <Sidebar />}
-            <main className="p-6">{children}</main>
+            <main className={isLoginPage ? "w-full" : "flex-1 ml-64"}>{children}</main>
           </div>
         </div>
       </body>
