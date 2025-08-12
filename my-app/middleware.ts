@@ -1,36 +1,41 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import jwt from "jsonwebtoken";
+
+const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key"; // same key used when creating token
 
 export function middleware(req: NextRequest) {
-  const token = req.cookies.get("token")?.value; // or "auth" depending on your cookie name
-  const role = req.cookies.get("role")?.value;   // "admin" or "staff"
+  const token = req.cookies.get("token")?.value;
 
-  const { pathname } = req.nextUrl;
-
-  // Public routes (no authentication needed)
-  const publicPaths = ["/", "/login"];
-
-  if (publicPaths.includes(pathname)) {
-    return NextResponse.next();
-  }
-
-  // If no token, redirect to login
+  // If no token → redirect to login
   if (!token) {
     return NextResponse.redirect(new URL("/login", req.url));
   }
 
-  // Role-based protection example:
-  if (pathname.startsWith("/admin") && role !== "admin") {
-    return NextResponse.redirect(new URL("/unauthorized", req.url));
-  }
-  if (pathname.startsWith("/staff") && role !== "staff") {
-    return NextResponse.redirect(new URL("/unauthorized", req.url));
-  }
+  try {
+    // Verify token and decode payload
+    const decoded = jwt.verify(token, JWT_SECRET) as { role: string; exp: number };
 
-  return NextResponse.next();
+    // Role-based restrictions
+    if (req.nextUrl.pathname.startsWith("/admin") && decoded.role !== "admin") {
+      return NextResponse.redirect(new URL("/unauthorized", req.url));
+    }
+    if (req.nextUrl.pathname.startsWith("/staff") && decoded.role !== "staff") {
+      return NextResponse.redirect(new URL("/unauthorized", req.url));
+    }
+
+    // Token expiry check (jwt.verify already throws if expired, but extra check here)
+    if (Date.now() >= decoded.exp * 1000) {
+      return NextResponse.redirect(new URL("/login", req.url));
+    }
+
+    return NextResponse.next();
+  } catch {
+    // If invalid or expired token → redirect to login
+    return NextResponse.redirect(new URL("/login", req.url));
+  }
 }
 
-// Apply middleware to all routes except public ones
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
+  matcher: ["/admin/:path*", "/staff/:path*"],
 };
