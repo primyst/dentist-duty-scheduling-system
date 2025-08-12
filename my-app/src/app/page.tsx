@@ -12,27 +12,33 @@ export default function HomePage() {
   const [error, setError] = useState("");
   const router = useRouter();
 
-  const handleContinue = () => {
-    if (selectedRole === "admin" && validAdminIds.includes(userId)) {
+  const handleContinue = async () => {
+  if (selectedRole === "admin" && validAdminIds.includes(userId)) {
+    setError("");
+    await fetch("/api/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ role: "admin", userId }),
+    });
+    router.push("/dashboard");
+    return;
+  }
+
+  if (selectedRole === "staff") {
+    const matchedStaff = staff.find((s) => s.id === userId);
+    if (matchedStaff) {
       setError("");
-      router.push("/dashboard");
-      return;
+      await fetch("/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ role: "staff", userId }),
+      });
+      router.push("/staff");
+    } else {
+      setError("Invalid ID for selected role");
     }
-
-    if (selectedRole === "staff") {
-      const matchedStaff = staff.find((s) => s.id === userId);
-
-      if (matchedStaff) {
-        setError("");
-
-        // ✅ Save using the correct key
-        localStorage.setItem("staffInfo", JSON.stringify(matchedStaff));
-        router.push("/staff");
-      } else {
-        setError("Invalid ID for selected role");
-      }
-    }
-  };
+  }
+};
 
   return (
     <main className="grid place-content-center place-items-center text-center w-full mx-auto lg:pl-24 px-4">
