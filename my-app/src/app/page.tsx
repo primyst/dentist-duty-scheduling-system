@@ -41,7 +41,7 @@ export default function HomePage() {
 };
 
   return (
-    <main className="grid place-content-center place-items-center text-center w-full mx-auto lg:pl-24 px-4">
+    <main className="grid place-content-center place-items-center text-center w-full mx-auto lg:pl-24 p-4">
       <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold mb-6 text-gray-800">
         Welcome to LAUTECH MedSchedule
       </h1>
