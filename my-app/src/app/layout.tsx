@@ -1,3 +1,5 @@
+"use client";
+
 import "./globals.css";
 import Sidebar from "@/components/Sidebar";
 import type { Metadata } from "next";
