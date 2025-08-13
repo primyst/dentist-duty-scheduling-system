@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import { staff as staffList } from "@/lib/data";
+import Sidebar from "@/components/Sidebar";
 
 interface SwapRequest {
   id: number;
@@ -91,6 +92,8 @@ export default function SwapRequestsPage() {
   };
 
   return (
+   <div>
+    <Sidebar />
     <main className="p-6 max-w-4xl mx-auto">
       <h1 className="text-2xl font-bold mb-6 text-blue-800">
         Shift Swap Requests {role === "staff" && `(${department} Department)`}
@@ -130,5 +133,6 @@ export default function SwapRequestsPage() {
         </div>
       )}
     </main>
+   </div>
   );
 }
