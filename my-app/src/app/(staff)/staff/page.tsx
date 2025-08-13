@@ -42,7 +42,10 @@ export default function StaffPage() {
 
       <ScheduleTable date={selectedDate} onlyDepartment={staffInfo.department} view="daily" />
 
-      <SwapForm requesterId={staffInfo.id || "anonymous"} />
+      <SwapForm
+  requesterId={staffInfo.id || "anonymous"}
+  department={staffInfo.department}
+/>
     </div>
   );
 }
