@@ -30,8 +30,10 @@ export default function StaffPage() {
   if (!staffInfo) return null;
 
   return (
+   <div>
+    <Sidebar />
     <main className="p-4 max-w-3xl mx-auto space-y-8">
-      <Sidebar />
+     
       <h1 className="text-xl font-bold">Welcome, {staffInfo.name} 👋</h1>
 
       {/* Date Picker */}
@@ -55,5 +57,6 @@ export default function StaffPage() {
       {/* Shift Swap Request form */}
 <SwapForm requesterId={staffInfo.id} department={staffInfo.department} />
     </main>
+   </div>
   );
 }
