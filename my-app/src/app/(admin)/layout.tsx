@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import AdminSidebar from "@/components/AdminSidebar";
+import Sidebar from "@/components/AdminSidebar";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -21,7 +21,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   return (
     <div className="flex">
-      <AdminSidebar />
+      <Sidebar />
       {/* pad for mobile top bar height, and left space for desktop sidebar */}
       <main className="flex-1 pt-14 lg:pt-0 lg:ml-64 p-4">{children}</main>
     </div>
