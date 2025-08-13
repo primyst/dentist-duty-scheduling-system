@@ -7,7 +7,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import ScheduleTable from "@/components/ScheduleTable";
 import { Calendar } from "lucide-react";
 import SwapForm from "@/components/SwapForm";
-import { Sidebar} from "@/components/Sidebar";
+import { Sidebar } from "@/components/Sidebar";
 
 export default function StaffPage() {
   const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
