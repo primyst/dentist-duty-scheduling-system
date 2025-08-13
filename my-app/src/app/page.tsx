@@ -29,8 +29,8 @@ export default function HomePage() {
       <select
         className="border px-3 py-2 rounded w-64"
         value={role}
-        onChange={(e) => setRole(e.target.value as any)}
-      >
+        onChange={(e) => setRole(e.target.value as "" | "admin" | "staff")}
+        >
         <option value="">Select Role</option>
         <option value="admin">Admin</option>
         <option value="staff">Staff</option>
