@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { validAdminIds, staff } from "@/lib/data";
-import { v4 as uuidv4 } from "uuid";
 
 export default function HomePage() {
   const [selectedRole, setSelectedRole] = useState<"admin" | "staff" | null>(null);
@@ -12,23 +11,22 @@ export default function HomePage() {
   const router = useRouter();
 
   const handleContinue = () => {
-    const token = uuidv4(); // generate unique token
-    const expiration = new Date(Date.now() + 1 * 60 * 60 * 1000);
-
     if (selectedRole === "admin" && validAdminIds.includes(userId)) {
-      document.cookie = `token=${token}; path=/; expires=${expiration.toUTCString()}`;
-      document.cookie = `role=admin; path=/; expires=${expiration.toUTCString()}`;
+      setError("");
+      // Set auth token + timestamp
+      localStorage.setItem("authToken", userId);
+      localStorage.setItem("authTokenTimestamp", Date.now().toString());
       router.push("/dashboard");
       return;
     }
 
     if (selectedRole === "staff") {
       const matchedStaff = staff.find((s) => s.id === userId);
-
       if (matchedStaff) {
-        document.cookie = `token=${token}; path=/; expires=${expiration.toUTCString()}`;
-        document.cookie = `role=staff; path=/; expires=${expiration.toUTCString()}`;
+        setError("");
         localStorage.setItem("staffInfo", JSON.stringify(matchedStaff));
+        localStorage.setItem("authToken", userId);
+        localStorage.setItem("authTokenTimestamp", Date.now().toString());
         router.push("/staff");
       } else {
         setError("Invalid ID for selected role");
@@ -37,8 +35,8 @@ export default function HomePage() {
   };
 
   return (
-    <main className="grid place-content-center place-items-center text-center w-full mx-auto lg:pl-24 px-4">
-      <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold mb-6 text-gray-800">
+    <main className="grid place-content-center place-items-center text-center w-full mx-auto px-4">
+      <h1 className="text-3xl font-bold mb-6 text-gray-800">
         Welcome to LAUTECH MedSchedule
       </h1>
       <p className="text-lg text-gray-600 mb-6">
@@ -47,10 +45,9 @@ export default function HomePage() {
 
       <div className="grid gap-6 mb-6">
         <button
-          className={`px-6 py-3 rounded-lg border ${
-            selectedRole === "admin"
-              ? "bg-blue-500 text-white"
-              : "bg-white text-blue-600 border-blue-600"
+          className={`px-6 py-3 rounded-lg border ${selectedRole === "admin"
+            ? "bg-blue-500 text-white"
+            : "bg-white text-blue-600 border-blue-600"
           }`}
           onClick={() => setSelectedRole("admin")}
         >
@@ -58,10 +55,9 @@ export default function HomePage() {
         </button>
 
         <button
-          className={`px-6 py-3 rounded-lg border ${
-            selectedRole === "staff"
-              ? "bg-green-600 text-white"
-              : "bg-white text-green-600 border-green-600"
+          className={`px-6 py-3 rounded-lg border ${selectedRole === "staff"
+            ? "bg-green-600 text-white"
+            : "bg-white text-green-600 border-green-600"
           }`}
           onClick={() => setSelectedRole("staff")}
         >
