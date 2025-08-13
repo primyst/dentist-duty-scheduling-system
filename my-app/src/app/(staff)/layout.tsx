@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import StaffSidebar from "@/components/StaffSidebar";
+import Sidebar from "@/components/StaffSidebar";
 
 export default function StaffLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -21,7 +21,7 @@ export default function StaffLayout({ children }: { children: React.ReactNode })
 
   return (
     <div className="flex">
-      <StaffSidebar />
+      <Sidebar />
       {/* pad for mobile top bar height, and left space for desktop sidebar */}
       <main className="flex-1 pt-14 lg:pt-0 lg:ml-64 p-4">{children}</main>
     </div>
