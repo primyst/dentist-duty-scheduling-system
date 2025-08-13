@@ -5,12 +5,14 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { Calendar } from "lucide-react";
 import ScheduleTable from "@/components/ScheduleTable";
+import { Sidebar } from "@/components/Sidebar";
 
 export default function DashboardPage() {
   const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
 
   return (
     <main className="p-4 max-w-4xl mx-auto">
+      <Sidebar />
       <h1 className="text-2xl font-bold mb-6">Admin Dashboard</h1>
 
       {/* Date Picker */}
