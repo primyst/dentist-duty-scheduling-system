@@ -11,8 +11,10 @@ export default function DashboardPage() {
   const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
 
   return (
+   <div>
+    <Sidebar />
     <main className="p-4 max-w-4xl mx-auto">
-      <Sidebar />
+      
       <h1 className="text-2xl font-bold mb-6">Admin Dashboard</h1>
 
       {/* Date Picker */}
@@ -29,5 +31,6 @@ export default function DashboardPage() {
       {/* Schedule Table */}
       <ScheduleTable date={selectedDate} view="daily" />
     </main>
+   </div>
   );
 }
