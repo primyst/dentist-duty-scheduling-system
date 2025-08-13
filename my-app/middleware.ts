@@ -1,29 +1,28 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
+const EXPIRE_TIME = 1000 * 60 * 60; // 1 hour
+
 export function middleware(req: NextRequest) {
-  const token = req.cookies.get("token")?.value;
-  const role = req.cookies.get("role")?.value;
-  const { pathname } = req.nextUrl;
+  const { cookies, nextUrl } = req;
+  const token = cookies.get("authToken");
 
-  // Public routes
-  const publicPaths = ["/"];
-  if (publicPaths.includes(pathname)) return NextResponse.next();
-
-  // If no token, redirect
-  if (!token) return NextResponse.redirect(new URL("/", req.url));
-
-  // Role-based protection
-  if (pathname.startsWith("/dashboard") && role !== "admin") {
+  if (!token) {
     return NextResponse.redirect(new URL("/", req.url));
   }
-  if (pathname.startsWith("/staff") && role !== "staff") {
-    return NextResponse.redirect(new URL("/", req.url));
+
+  const tokenTimestamp = cookies.get("authTokenTimestamp");
+  if (tokenTimestamp && Date.now() - parseInt(tokenTimestamp) > EXPIRE_TIME) {
+    // Token expired
+    const res = NextResponse.redirect(new URL("/", req.url));
+    res.cookies.delete("authToken");
+    res.cookies.delete("authTokenTimestamp");
+    return res;
   }
 
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
+  matcher: ["/dashboard/:path*", "/staff/:path*", "/requests/:path*", "/stats/:path*"],
 };
