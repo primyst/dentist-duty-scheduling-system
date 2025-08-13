@@ -5,7 +5,7 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { Calendar } from "lucide-react";
 import ScheduleTable from "@/components/ScheduleTable";
-import { Sidebar } from "@/components/Sidebar";
+import Sidebar from "@/components/Sidebar";
 
 export default function DashboardPage() {
   const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
