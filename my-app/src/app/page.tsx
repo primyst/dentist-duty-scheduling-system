@@ -13,7 +13,7 @@ export default function HomePage() {
 
   const handleContinue = () => {
     const token = uuidv4(); // generate unique token
-    const expiration = new Date(Date.now() + 2 * 60 * 1000);
+    const expiration = new Date(Date.now() + 1 * 60 * 60 * 1000);
 
     if (selectedRole === "admin" && validAdminIds.includes(userId)) {
       document.cookie = `token=${token}; path=/; expires=${expiration.toUTCString()}`;
