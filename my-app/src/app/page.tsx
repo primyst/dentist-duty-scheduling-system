@@ -2,88 +2,58 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { validAdminIds, staff } from "@/lib/data";
 
 export default function HomePage() {
-  const [selectedRole, setSelectedRole] = useState<"admin" | "staff" | null>(null);
-  const [userId, setUserId] = useState("");
-  const [error, setError] = useState("");
+  const [role, setRole] = useState<"admin" | "staff" | "">("");
+  const [department, setDepartment] = useState("");
   const router = useRouter();
 
   const handleContinue = () => {
-    if (selectedRole === "admin" && validAdminIds.includes(userId)) {
-      setError("");
-      // Set auth token + timestamp
-      localStorage.setItem("authToken", userId);
-      localStorage.setItem("authTokenTimestamp", Date.now().toString());
-      router.push("/dashboard");
-      return;
-    }
+    if (!role) return alert("Select a role first");
 
-    if (selectedRole === "staff") {
-      const matchedStaff = staff.find((s) => s.id === userId);
-      if (matchedStaff) {
-        setError("");
-        localStorage.setItem("staffInfo", JSON.stringify(matchedStaff));
-        localStorage.setItem("authToken", userId);
-        localStorage.setItem("authTokenTimestamp", Date.now().toString());
-        router.push("/staff");
-      } else {
-        setError("Invalid ID for selected role");
-      }
+    localStorage.setItem("role", role);
+    if (role === "staff") {
+      if (!department) return alert("Select a department");
+      localStorage.setItem("department", department);
+      router.push("/my-shifts");
+    } else {
+      router.push("/dashboard");
     }
   };
 
   return (
-    <main className="grid place-content-center place-items-center text-center w-full mx-auto px-4">
-      <h1 className="text-3xl font-bold mb-6 text-gray-800">
-        Welcome to LAUTECH MedSchedule
-      </h1>
-      <p className="text-lg text-gray-600 mb-6">
-        Please select your role and enter your ID to proceed.
-      </p>
+    <main className="flex flex-col items-center justify-center h-screen space-y-4">
+      <h1 className="text-2xl font-bold">Welcome to MedSchedule</h1>
 
-      <div className="grid gap-6 mb-6">
-        <button
-          className={`px-6 py-3 rounded-lg border ${selectedRole === "admin"
-            ? "bg-blue-500 text-white"
-            : "bg-white text-blue-600 border-blue-600"
-          }`}
-          onClick={() => setSelectedRole("admin")}
+      <select
+        className="border px-4 py-2 rounded"
+        value={role}
+        onChange={(e) => setRole(e.target.value as "admin" | "staff" | "")}
+      >
+        <option value="">Select Role</option>
+        <option value="admin">Admin</option>
+        <option value="staff">Staff</option>
+      </select>
+
+      {role === "staff" && (
+        <select
+          className="border px-4 py-2 rounded"
+          value={department}
+          onChange={(e) => setDepartment(e.target.value)}
         >
-          Admin
-        </button>
-
-        <button
-          className={`px-6 py-3 rounded-lg border ${selectedRole === "staff"
-            ? "bg-green-600 text-white"
-            : "bg-white text-green-600 border-green-600"
-          }`}
-          onClick={() => setSelectedRole("staff")}
-        >
-          Staff
-        </button>
-      </div>
-
-      {selectedRole && (
-        <>
-          <input
-            type="text"
-            value={userId}
-            onChange={(e) => setUserId(e.target.value)}
-            placeholder={`Enter your ${selectedRole === "admin" ? "Admin" : "Staff"} ID`}
-            className="px-4 py-2 border rounded w-64 mb-4"
-          />
-          <button
-            className="px-6 py-2 bg-black text-white rounded hover:bg-gray-900"
-            onClick={handleContinue}
-          >
-            Continue
-          </button>
-        </>
+          <option value="">Select Department</option>
+          <option value="Emergency">Emergency</option>
+          <option value="Surgery">Surgery</option>
+          <option value="Pediatrics">Pediatrics</option>
+        </select>
       )}
 
-      {error && <p className="text-red-500 mt-4">{error}</p>}
+      <button
+        className="bg-blue-600 text-white px-4 py-2 rounded"
+        onClick={handleContinue}
+      >
+        Continue
+      </button>
     </main>
   );
 }
