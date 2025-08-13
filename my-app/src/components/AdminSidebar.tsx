@@ -12,7 +12,7 @@ const links = [
   { href: "/stats", label: "Stats" },
 ];
 
-export default function AdminSidebar() {
+export default function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const [open, setOpen] = useState(false);
