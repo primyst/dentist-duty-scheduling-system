@@ -12,7 +12,7 @@ const links = [
   // { href: "/dept-requests", label: "Department Requests" },
 ];
 
-export default function StaffSidebar() {
+export default function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const [open, setOpen] = useState(false);
