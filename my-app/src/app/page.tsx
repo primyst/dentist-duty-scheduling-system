@@ -3,45 +3,41 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { validAdminIds, staff } from "@/lib/data";
+import { v4 as uuidv4 } from "uuid";
 
 export default function HomePage() {
-  const [selectedRole, setSelectedRole] = useState<"admin" | "staff" | null>(
-    null
-  );
+  const [selectedRole, setSelectedRole] = useState<"admin" | "staff" | null>(null);
   const [userId, setUserId] = useState("");
   const [error, setError] = useState("");
   const router = useRouter();
 
-  const handleContinue = async () => {
-  if (selectedRole === "admin" && validAdminIds.includes(userId)) {
-    setError("");
-    await fetch("/api/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ role: "admin", userId }),
-    });
-    router.push("/dashboard");
-    return;
-  }
+  const handleContinue = () => {
+    const token = uuidv4(); // generate unique token
+    const expiration = new Date(Date.now() + 2 * 60 * 1000);
 
-  if (selectedRole === "staff") {
-    const matchedStaff = staff.find((s) => s.id === userId);
-    if (matchedStaff) {
-      setError("");
-      await fetch("/api/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ role: "staff", userId }),
-      });
-      router.push("/staff");
-    } else {
-      setError("Invalid ID for selected role");
+    if (selectedRole === "admin" && validAdminIds.includes(userId)) {
+      document.cookie = `token=${token}; path=/; expires=${expiration.toUTCString()}`;
+      document.cookie = `role=admin; path=/; expires=${expiration.toUTCString()}`;
+      router.push("/dashboard");
+      return;
     }
-  }
-};
+
+    if (selectedRole === "staff") {
+      const matchedStaff = staff.find((s) => s.id === userId);
+
+      if (matchedStaff) {
+        document.cookie = `token=${token}; path=/; expires=${expiration.toUTCString()}`;
+        document.cookie = `role=staff; path=/; expires=${expiration.toUTCString()}`;
+        localStorage.setItem("staffInfo", JSON.stringify(matchedStaff));
+        router.push("/staff");
+      } else {
+        setError("Invalid ID for selected role");
+      }
+    }
+  };
 
   return (
-    <main className="grid place-content-center place-items-center text-center w-full mx-auto lg:pl-24 p-4">
+    <main className="grid place-content-center place-items-center text-center w-full mx-auto lg:pl-24 px-4">
       <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold mb-6 text-gray-800">
         Welcome to LAUTECH MedSchedule
       </h1>
@@ -79,9 +75,7 @@ export default function HomePage() {
             type="text"
             value={userId}
             onChange={(e) => setUserId(e.target.value)}
-            placeholder={`Enter your ${
-              selectedRole === "admin" ? "Admin" : "Staff"
-            } ID`}
+            placeholder={`Enter your ${selectedRole === "admin" ? "Admin" : "Staff"} ID`}
             className="px-4 py-2 border rounded w-64 mb-4"
           />
           <button
