@@ -8,7 +8,6 @@ import clsx from "clsx";
 import Image from "next/image";
 
 const links = [
-  { href: "/", label: "Home" },
   { href: "/dashboard", label: "Admin Dashboard" },
   { href: "/staff", label: "My Schedule" },
   { href: "/requests", label: "Swap Requests" },
@@ -23,15 +22,13 @@ export default function Sidebar() {
 
   return (
     <>
-      {/* Mobile: Hamburger Button */}
+      {/* Mobile: Hamburger */}
       <div className="lg:hidden flex justify-between items-center bg-gray-800 text-white px-6 py-4 w-full">
         <h1 className="text-lg font-bold">Lautech MedSchedule</h1>
-        <button onClick={toggleSidebar}>
-          {open ? <X size={24} /> : <Menu size={24} />}
-        </button>
+        <button onClick={toggleSidebar}>{open ? <X size={24} /> : <Menu size={24} />}</button>
       </div>
 
-      {/* Sidebar for Desktop and Slide-in for Mobile */}
+      {/* Sidebar */}
       <aside
         className={clsx(
           "fixed top-0 left-0 h-full w-64 bg-gray-800 text-white p-6 space-y-4 z-50 transition-transform",
@@ -39,7 +36,6 @@ export default function Sidebar() {
           open ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
         )}
       >
-        {/* Sidebar header for mobile */}
         <div className="flex items-center gap-2 mb-4">
           <Image src="/lautech.png" width={40} height={40} alt="lautech logo" />
           <h1 className="font-bold uppercase text-xs md:text-sm lg:text-base">lautech medschedule</h1>
@@ -55,7 +51,7 @@ export default function Sidebar() {
                     "block hover:underline",
                     pathname === link.href ? "font-bold underline" : ""
                   )}
-                  onClick={() => setOpen(false)} // Close sidebar on link click
+                  onClick={() => setOpen(false)}
                 >
                   {link.label}
                 </Link>
@@ -64,9 +60,6 @@ export default function Sidebar() {
           </ul>
         </nav>
       </aside>
-
-      
-      
     </>
   );
 }
