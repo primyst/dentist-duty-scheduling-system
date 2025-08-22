@@ -71,7 +71,7 @@ export default function HomePage() {
         <input
           type="text"
           className="border px-3 py-2 rounded w-64"
-          placeholder="Enter your ID e.g. emerdoc001"
+          placeholder="Enter your passkey"
           value={passkey}
           onChange={(e) => setPasskey(e.target.value)}
         />
