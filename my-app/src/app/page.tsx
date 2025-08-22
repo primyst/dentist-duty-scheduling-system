@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { staff, validAdminIds } from "@/data";
+import { staff, validAdminIds } from "@/lib/data";
 
 export default function HomePage() {
   const [role, setRole] = useState<"" | "admin" | "staff">("");
