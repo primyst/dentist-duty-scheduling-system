@@ -1,5 +1,3 @@
-"use client"
-
 import React, { useState, useEffect, useReducer } from 'react';
 import { 
   Calendar, Users, RefreshCw, CheckCircle, XCircle, 
