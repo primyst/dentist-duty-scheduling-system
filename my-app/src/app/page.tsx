@@ -1,11 +1,9 @@
-"use client"
-
 import React, { useState, useEffect, useReducer } from 'react';
 import { 
   Calendar, Users, RefreshCw, CheckCircle, XCircle, 
-  AlertTriangle, Download, FileText, Settings, 
-  Clock, ArrowRightLeft, Bell, Eye, Filter,
-  ChevronRight, Save, RotateCcw, UserCheck
+  AlertTriangle, Download, 
+  Clock, ArrowRightLeft, Bell,
+  ChevronRight, ChevronLeft, UserCheck
 } from 'lucide-react';
 
 // Initial dentist data with availability and constraints
@@ -143,9 +141,6 @@ const DentistDutiesScheduler = () => {
   const [selectedCell, setSelectedCell] = useState(null);
   const [showAdminPanel, setShowAdminPanel] = useState(false);
   const [isAdmin, setIsAdmin] = useState(true);
-  const [swapTargetDentist, setSwapTargetDentist] = useState('');
-  const [swapTargetDay, setSwapTargetDay] = useState('');
-  const [swapTargetShift, setSwapTargetShift] = useState('');
   
   const [state, dispatch] = useReducer(scheduleReducer, {
     schedule: {},
@@ -294,17 +289,7 @@ const DentistDutiesScheduler = () => {
   };
 
   // Calculate total shifts per dentist
-  const getDentistShiftCount = (dentistId) => {
-    let count = 0;
-    daysOfWeek.forEach(day => {
-      shifts.forEach(shift => {
-        if (state.schedule[dentistId]?.[day]?.[shift]) {
-          count++;
-        }
-      });
-    });
-    return count;
-  };
+  
 
   // Week navigation
   const navigateWeek = (direction) => {
@@ -530,7 +515,7 @@ const DentistDutiesScheduler = () => {
             <table className="w-full">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900 w-48">Dentist</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900 w-64">Dentist</th>
                   {daysOfWeek.map(day => (
                     <th key={day} className="px-4 py-4 text-center text-sm font-semibold text-gray-900 min-w-32">
                       <div className="capitalize">{day}</div>
@@ -543,15 +528,23 @@ const DentistDutiesScheduler = () => {
                 {dentists.map(dentist => (
                   <tr key={dentist.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-sm font-semibold">
-                          {dentist.name.split(' ').map(n => n[0]).join('')}
-                        </div>
-                        <div>
-                          <div className="font-medium text-gray-900">{dentist.name}</div>
-                          <div className="text-sm text-gray-500">
-                            Max: {dentist.maxWeeklyShifts} shifts/week
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-sm font-semibold">
+                            {dentist.name.split(' ').map(n => n[0]).join('')}
                           </div>
+                          <div>
+                            <div className="font-medium text-gray-900">{dentist.name}</div>
+                            <div className="text-sm text-gray-500">
+                              Max: {dentist.maxWeeklyShifts} shifts/week
+                            </div>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-sm font-semibold text-gray-900">
+                            {getDentistShiftCount(dentist.id)}/{dentist.maxWeeklyShifts}
+                          </div>
+                          <div className="text-xs text-gray-500">Assigned</div>
                         </div>
                       </div>
                     </td>
@@ -625,19 +618,66 @@ const DentistDutiesScheduler = () => {
                 <span>Release Shift</span>
               </button>
               
-              <button
-                onClick={() => {
-                  // For demo purposes, auto-select first available swap
-                  const availableDentist = dentists.find(d => d.id !== selectedCell.dentistId);
-                  if (availableDentist) {
-                    requestSwap('swap', availableDentist.id, selectedCell.day, selectedCell.shift);
-                  }
-                }}
-                className="w-full bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600 transition-colors flex items-center justify-center space-x-2"
-              >
-                <ArrowRightLeft className="w-4 h-4" />
-                <span>Request Swap</span>
-              </button>
+              <div className="space-y-3">
+                <div className="text-sm font-medium text-gray-700">Request Swap With:</div>
+                
+                <select
+                  value={swapTargetDentist}
+                  onChange={(e) => setSwapTargetDentist(e.target.value)}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  <option value="">Select Dentist</option>
+                  {dentists
+                    .filter(d => d.id !== selectedCell.dentistId)
+                    .map(dentist => (
+                      <option key={dentist.id} value={dentist.id}>
+                        {dentist.name}
+                      </option>
+                    ))}
+                </select>
+
+                {swapTargetDentist && (
+                  <>
+                    <select
+                      value={swapTargetDay}
+                      onChange={(e) => setSwapTargetDay(e.target.value)}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                      <option value="">Select Day</option>
+                      {daysOfWeek.map(day => (
+                        <option key={day} value={day} className="capitalize">
+                          {day}
+                        </option>
+                      ))}
+                    </select>
+
+                    {swapTargetDay && (
+                      <select
+                        value={swapTargetShift}
+                        onChange={(e) => setSwapTargetShift(e.target.value)}
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      >
+                        <option value="">Select Shift</option>
+                        <option value="morning">Morning</option>
+                        <option value="afternoon">Afternoon</option>
+                      </select>
+                    )}
+                  </>
+                )}
+
+                <button
+                  onClick={() => {
+                    if (swapTargetDentist && swapTargetDay && swapTargetShift) {
+                      requestSwap('swap', parseInt(swapTargetDentist), swapTargetDay, swapTargetShift);
+                    }
+                  }}
+                  disabled={!swapTargetDentist || !swapTargetDay || !swapTargetShift}
+                  className="w-full bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600 transition-colors flex items-center justify-center space-x-2 disabled:bg-gray-300 disabled:cursor-not-allowed"
+                >
+                  <ArrowRightLeft className="w-4 h-4" />
+                  <span>Request Swap</span>
+                </button>
+              </div>
             </div>
 
             <button
