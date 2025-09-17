@@ -90,7 +90,7 @@ const initialDentists = [
   },
 ];
 
-const daysOfWeek: Day[] = [
+const daysOfWeek = [
   "monday",
   "tuesday",
   "wednesday",
@@ -98,7 +98,8 @@ const daysOfWeek: Day[] = [
   "friday",
   "saturday",
   "sunday",
-];
+] as const;
+
 type Day = (typeof daysOfWeek)[number];
 
 const shifts = ["morning", "afternoon"] as const;
