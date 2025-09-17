@@ -8,7 +8,6 @@ import {
   ChevronRight, ChevronLeft, UserCheck
 } from 'lucide-react';
 
-// Initial dentist data with availability and constraints
 const initialDentists = [
   {
     id: 1,
@@ -85,7 +84,6 @@ const initialDentists = [
 const daysOfWeek = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
 const shifts = ['morning', 'afternoon'];
 
-// Schedule reducer for managing complex state
 const scheduleReducer = (state, action) => {
   switch (action.type) {
     case 'SET_SCHEDULE':
@@ -98,25 +96,24 @@ const scheduleReducer = (state, action) => {
     case 'APPROVE_SWAP':
       const approvedSwap = state.swapRequests.find(req => req.id === action.payload);
       if (!approvedSwap) return state;
-      
+
       const newSchedule = { ...state.schedule };
-      
-      // Perform the swap
+
       if (approvedSwap.type === 'swap') {
         const temp = newSchedule[approvedSwap.fromDentist]?.[approvedSwap.day]?.[approvedSwap.shift];
         if (newSchedule[approvedSwap.fromDentist] && newSchedule[approvedSwap.fromDentist][approvedSwap.day]) {
           newSchedule[approvedSwap.fromDentist][approvedSwap.day][approvedSwap.shift] = 
-            newSchedule[approvedSwap.toDentist]?.[approvedSwap.targetDay]?.[approvedSwap.targetShift];
+            newSchedule[approvedSwap.toDentist]?.[approvedSwap.targetDay]?.[approvedSwap.targetShift] || null;
         }
         if (newSchedule[approvedSwap.toDentist] && newSchedule[approvedSwap.toDentist][approvedSwap.targetDay]) {
-          newSchedule[approvedSwap.toDentist][approvedSwap.targetDay][approvedSwap.targetShift] = temp;
+          newSchedule[approvedSwap.toDentist][approvedSwap.targetDay][approvedSwap.targetShift] = temp || null;
         }
       } else if (approvedSwap.type === 'release') {
         if (newSchedule[approvedSwap.fromDentist] && newSchedule[approvedSwap.fromDentist][approvedSwap.day]) {
           newSchedule[approvedSwap.fromDentist][approvedSwap.day][approvedSwap.shift] = null;
         }
       }
-      
+
       return {
         ...state,
         schedule: newSchedule,
@@ -143,20 +140,23 @@ const DentistDutiesScheduler = () => {
   const [selectedCell, setSelectedCell] = useState(null);
   const [showAdminPanel, setShowAdminPanel] = useState(false);
   const [isAdmin, setIsAdmin] = useState(true);
-  
+
+  const [swapTargetDentist, setSwapTargetDentist] = useState('');
+  const [swapTargetDay, setSwapTargetDay] = useState('');
+  const [swapTargetShift, setSwapTargetShift] = useState('');
+
   const [state, dispatch] = useReducer(scheduleReducer, {
     schedule: {},
     swapRequests: [],
     conflicts: []
   });
 
-  // Auto-assign shifts with workload balancing and conflict detection
+  // Auto-assign shifts
   const autoAssignShifts = () => {
     const newSchedule = {};
     const dentistShiftCounts = {};
     const conflicts = [];
-    
-    // Initialize dentist schedule and shift counts
+
     dentists.forEach(dentist => {
       newSchedule[dentist.id] = {};
       dentistShiftCounts[dentist.id] = 0;
@@ -165,7 +165,6 @@ const DentistDutiesScheduler = () => {
       });
     });
 
-    // Get all possible assignments
     const allAssignments = [];
     dentists.forEach(dentist => {
       daysOfWeek.forEach(day => {
@@ -183,31 +182,26 @@ const DentistDutiesScheduler = () => {
       });
     });
 
-    // Sort assignments to prioritize balanced workload
     allAssignments.sort((a, b) => {
       const countA = dentistShiftCounts[a.dentistId];
       const countB = dentistShiftCounts[b.dentistId];
       return countA - countB;
     });
 
-    // Assign shifts ensuring coverage and balance
     const shiftRequirements = {};
     daysOfWeek.forEach(day => {
-      shiftRequirements[day] = { morning: 1, afternoon: 1 }; // At least 1 dentist per shift
+      shiftRequirements[day] = { morning: 1, afternoon: 1 };
     });
 
     allAssignments.forEach(assignment => {
       const { dentistId, day, shift, maxShifts } = assignment;
-      
-      // Check if dentist hasn't exceeded max shifts
+
       if (dentistShiftCounts[dentistId] < maxShifts) {
-        // Check if shift still needs coverage
         if (shiftRequirements[day][shift] > 0) {
-          // Check for same-day conflicts
           const hasConflict = shifts.some(s => 
             s !== shift && newSchedule[dentistId][day][s] !== null
           );
-          
+
           if (!hasConflict) {
             newSchedule[dentistId][day][shift] = {
               dentistId,
@@ -231,7 +225,6 @@ const DentistDutiesScheduler = () => {
       }
     });
 
-    // Detect uncovered shifts
     daysOfWeek.forEach(day => {
       shifts.forEach(shift => {
         if (shiftRequirements[day][shift] > 0) {
@@ -250,12 +243,10 @@ const DentistDutiesScheduler = () => {
     dispatch({ type: 'SET_CONFLICTS', payload: conflicts });
   };
 
-  // Initialize with auto-assignment
   useEffect(() => {
     autoAssignShifts();
   }, []);
 
-  // Handle cell click for swap requests
   const handleCellClick = (dentistId, day, shift) => {
     if (!isAdmin) {
       setSelectedCell({ dentistId, day, shift });
@@ -263,10 +254,9 @@ const DentistDutiesScheduler = () => {
     }
   };
 
-  // Request shift swap
   const requestSwap = (type, targetDentist = null, targetDay = null, targetShift = null) => {
     if (!selectedCell) return;
-    
+
     const swapRequest = {
       id: Date.now(),
       type, // 'swap' or 'release'
@@ -276,22 +266,35 @@ const DentistDutiesScheduler = () => {
       toDentist: targetDentist,
       targetDay: targetDay,
       targetShift: targetShift,
-      timestamp: new Date(),
+      timestamp: new Date().toISOString(), // store ISO string (safer)
       status: 'pending',
       fromDentistName: dentists.find(d => d.id === selectedCell.dentistId)?.name,
       toDentistName: targetDentist ? dentists.find(d => d.id === targetDentist)?.name : null
     };
-    
+
     dispatch({ type: 'ADD_SWAP_REQUEST', payload: swapRequest });
     setShowSwapModal(false);
     setSelectedCell(null);
+    // Reset modal fields
     setSwapTargetDentist('');
     setSwapTargetDay('');
     setSwapTargetShift('');
   };
 
-  // Calculate total shifts per dentist
-  
+  // Helper: count assigned shifts for a dentist
+  const getDentistShiftCount = (dentistId) => {
+    let count = 0;
+    const scheduleForDentist = state.schedule?.[dentistId];
+    if (!scheduleForDentist) return 0;
+
+    daysOfWeek.forEach(day => {
+      shifts.forEach(shift => {
+        if (scheduleForDentist[day]?.[shift]) count++;
+      });
+    });
+
+    return count;
+  };
 
   // Week navigation
   const navigateWeek = (direction) => {
@@ -300,20 +303,18 @@ const DentistDutiesScheduler = () => {
     setSelectedWeek(newDate);
   };
 
-  // Get week date range
   const getWeekRange = () => {
     const startOfWeek = new Date(selectedWeek);
     startOfWeek.setDate(selectedWeek.getDate() - selectedWeek.getDay() + 1); // Monday
     const endOfWeek = new Date(startOfWeek);
     endOfWeek.setDate(startOfWeek.getDate() + 6);
-    
+
     return {
       start: startOfWeek,
       end: endOfWeek
     };
   };
 
-  // Get shift display info
   const getShiftInfo = (dentistId, day, shift) => {
     const assignment = state.schedule[dentistId]?.[day]?.[shift];
     if (assignment) {
@@ -323,10 +324,10 @@ const DentistDutiesScheduler = () => {
         isAvailable: true
       };
     }
-    
+
     const dentist = dentists.find(d => d.id === dentistId);
     const isAvailable = dentist?.availability[day]?.includes(shift);
-    
+
     return {
       assigned: false,
       dentistName: null,
@@ -334,35 +335,33 @@ const DentistDutiesScheduler = () => {
     };
   };
 
-  // Get cell styling
   const getCellStyling = (dentistId, day, shift) => {
     const shiftInfo = getShiftInfo(dentistId, day, shift);
     const hasConflict = state.conflicts.some(c => 
       c.dentistId === dentistId && c.day === day
     );
-    
+
     if (hasConflict) {
       return 'bg-red-100 border-red-300 text-red-800';
     }
-    
+
     if (shiftInfo.assigned) {
       return shift === 'morning' 
         ? 'bg-blue-100 border-blue-300 text-blue-800'
         : 'bg-green-100 border-green-300 text-green-800';
     }
-    
+
     if (shiftInfo.isAvailable) {
       return 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100';
     }
-    
+
     return 'bg-gray-200 border-gray-300 text-gray-400';
   };
 
-  // Export to CSV
   const exportToCSV = () => {
     const csvData = [];
     csvData.push(['Dentist', ...daysOfWeek.map(day => `${day} Morning`), ...daysOfWeek.map(day => `${day} Afternoon`)]);
-    
+
     dentists.forEach(dentist => {
       const row = [dentist.name];
       daysOfWeek.forEach(day => {
@@ -375,7 +374,7 @@ const DentistDutiesScheduler = () => {
       });
       csvData.push(row);
     });
-    
+
     const csvContent = csvData.map(row => row.join(',')).join('\n');
     const blob = new Blob([csvContent], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
@@ -387,7 +386,8 @@ const DentistDutiesScheduler = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+    
+       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
       {/* Header */}
       <div className="bg-white border-b border-gray-200 px-6 py-4">
         <div className="flex items-center justify-between">
@@ -400,7 +400,7 @@ const DentistDutiesScheduler = () => {
               <p className="text-sm text-gray-500">Automated shift scheduling with conflict management</p>
             </div>
           </div>
-          
+
           <div className="flex items-center space-x-4">
             {/* User Mode Toggle */}
             <div className="flex items-center space-x-2 bg-gray-100 rounded-lg p-1">
@@ -438,7 +438,7 @@ const DentistDutiesScheduler = () => {
                 )}
               </button>
             </div>
-            
+
             <button 
               onClick={autoAssignShifts}
               className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-2 rounded-lg font-medium hover:shadow-lg transition-all duration-200 flex items-center space-x-2"
@@ -446,7 +446,7 @@ const DentistDutiesScheduler = () => {
               <RefreshCw className="w-4 h-4" />
               <span>Auto Assign</span>
             </button>
-            
+
             <button 
               onClick={exportToCSV}
               className="bg-green-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-green-700 transition-colors flex items-center space-x-2"
@@ -481,7 +481,7 @@ const DentistDutiesScheduler = () => {
                 <span className="text-sm text-gray-600">Not Available</span>
               </div>
             </div>
-            
+
             <div className="flex items-center space-x-4 text-sm text-gray-600">
               {state.conflicts.length > 0 && (
                 <div className="flex items-center space-x-2 text-red-600">
@@ -602,7 +602,7 @@ const DentistDutiesScheduler = () => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl shadow-xl max-w-md w-full mx-4 p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Shift Swap Request</h3>
-            
+
             <div className="mb-4 p-4 bg-gray-50 rounded-lg">
               <p className="text-sm text-gray-600">
                 <strong>Current Assignment:</strong><br />
@@ -619,10 +619,10 @@ const DentistDutiesScheduler = () => {
                 <XCircle className="w-4 h-4" />
                 <span>Release Shift</span>
               </button>
-              
+
               <div className="space-y-3">
                 <div className="text-sm font-medium text-gray-700">Request Swap With:</div>
-                
+
                 <select
                   value={swapTargetDentist}
                   onChange={(e) => setSwapTargetDentist(e.target.value)}
@@ -730,10 +730,10 @@ const DentistDutiesScheduler = () => {
                           )}
                         </p>
                         <p className="text-xs text-gray-500">
-                          Requested: {request.timestamp.toLocaleString()}
+                          Requested: {new Date(request.timestamp).toLocaleString()}
                         </p>
                       </div>
-                      
+
                       <div className="flex space-x-2">
                         <button
                           onClick={() => dispatch({ type: 'APPROVE_SWAP', payload: request.id })}
@@ -763,3 +763,12 @@ const DentistDutiesScheduler = () => {
 };
 
 export default DentistDutiesScheduler;
+
+
+
+
+
+
+
+
+
