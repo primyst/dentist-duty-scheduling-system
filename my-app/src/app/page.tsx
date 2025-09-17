@@ -1,12 +1,21 @@
 "use client";
 
-import React, { useState, useEffect, useReducer } from 'react';
-import { 
-  Calendar, Users, RefreshCw, CheckCircle, XCircle, 
-  AlertTriangle, Download, 
-  Clock, ArrowRightLeft, Bell,
-  ChevronRight, ChevronLeft, UserCheck
-} from 'lucide-react';
+import React, { useCallback, useEffect, useReducer, useState } from "react";
+import {
+  Calendar,
+  Users,
+  RefreshCw,
+  CheckCircle,
+  XCircle,
+  AlertTriangle,
+  Download,
+  Clock,
+  ArrowRightLeft,
+  Bell,
+  ChevronRight,
+  ChevronLeft,
+  UserCheck,
+} from "lucide-react";
 
 const initialDentists = [
   {
@@ -14,380 +23,490 @@ const initialDentists = [
     name: "Dr. Sarah Johnson",
     maxWeeklyShifts: 5,
     availability: {
-      monday: ['morning', 'afternoon'],
-      tuesday: ['morning', 'afternoon'],
-      wednesday: ['morning'],
-      thursday: ['afternoon'],
-      friday: ['morning', 'afternoon'],
-      saturday: ['morning'],
-      sunday: []
-    }
+      monday: ["morning", "afternoon"],
+      tuesday: ["morning", "afternoon"],
+      wednesday: ["morning"],
+      thursday: ["afternoon"],
+      friday: ["morning", "afternoon"],
+      saturday: ["morning"],
+      sunday: [],
+    },
   },
   {
     id: 2,
     name: "Dr. Michael Chen",
     maxWeeklyShifts: 4,
     availability: {
-      monday: ['afternoon'],
-      tuesday: ['morning', 'afternoon'],
-      wednesday: ['morning', 'afternoon'],
-      thursday: ['morning', 'afternoon'],
-      friday: ['morning'],
+      monday: ["afternoon"],
+      tuesday: ["morning", "afternoon"],
+      wednesday: ["morning", "afternoon"],
+      thursday: ["morning", "afternoon"],
+      friday: ["morning"],
       saturday: [],
-      sunday: ['morning']
-    }
+      sunday: ["morning"],
+    },
   },
   {
     id: 3,
     name: "Dr. Emily Rodriguez",
     maxWeeklyShifts: 6,
     availability: {
-      monday: ['morning', 'afternoon'],
-      tuesday: ['morning'],
-      wednesday: ['afternoon'],
-      thursday: ['morning', 'afternoon'],
-      friday: ['afternoon'],
-      saturday: ['morning', 'afternoon'],
-      sunday: ['afternoon']
-    }
+      monday: ["morning", "afternoon"],
+      tuesday: ["morning"],
+      wednesday: ["afternoon"],
+      thursday: ["morning", "afternoon"],
+      friday: ["afternoon"],
+      saturday: ["morning", "afternoon"],
+      sunday: ["afternoon"],
+    },
   },
   {
     id: 4,
     name: "Dr. David Williams",
     maxWeeklyShifts: 3,
     availability: {
-      monday: ['morning'],
-      tuesday: ['afternoon'],
-      wednesday: ['morning', 'afternoon'],
-      thursday: ['morning'],
+      monday: ["morning"],
+      tuesday: ["afternoon"],
+      wednesday: ["morning", "afternoon"],
+      thursday: ["morning"],
       friday: [],
-      saturday: ['afternoon'],
-      sunday: ['morning', 'afternoon']
-    }
+      saturday: ["afternoon"],
+      sunday: ["morning", "afternoon"],
+    },
   },
   {
     id: 5,
     name: "Dr. Lisa Thompson",
     maxWeeklyShifts: 5,
     availability: {
-      monday: ['afternoon'],
-      tuesday: ['morning', 'afternoon'],
-      wednesday: ['morning'],
-      thursday: ['afternoon'],
-      friday: ['morning', 'afternoon'],
-      saturday: ['morning'],
-      sunday: ['morning']
-    }
-  }
+      monday: ["afternoon"],
+      tuesday: ["morning", "afternoon"],
+      wednesday: ["morning"],
+      thursday: ["afternoon"],
+      friday: ["morning", "afternoon"],
+      saturday: ["morning"],
+      sunday: ["morning"],
+    },
+  },
 ];
 
-const daysOfWeek = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
-const shifts = ['morning', 'afternoon'];
+const daysOfWeek = [
+  "monday",
+  "tuesday",
+  "wednesday",
+  "thursday",
+  "friday",
+  "saturday",
+  "sunday",
+] as const;
+type Day = (typeof daysOfWeek)[number];
 
-const scheduleReducer = (state, action) => {
+const shifts = ["morning", "afternoon"] as const;
+type Shift = (typeof shifts)[number];
+
+type ScheduleAssignment = {
+  dentistId: number;
+  dentistName: string;
+  assigned: true;
+  day: Day;
+  shift: Shift;
+};
+
+type SwapRequest = {
+  id: number;
+  type: "swap" | "release";
+  fromDentist: number;
+  day: Day;
+  shift: Shift;
+  toDentist?: number | null;
+  targetDay?: Day | null;
+  targetShift?: Shift | null;
+  timestamp: string; // ISO string
+  status: "pending" | "approved" | "rejected";
+  fromDentistName?: string;
+  toDentistName?: string | null;
+};
+
+type Conflict = {
+  id: string;
+  message: string;
+  dentistId?: number;
+  day?: Day;
+  shift?: Shift;
+  type: string;
+};
+
+type ScheduleMap = Record<
+  number,
+  Record<Day, Record<Shift, ScheduleAssignment | null>>
+>;
+
+type ScheduleState = {
+  schedule: ScheduleMap;
+  swapRequests: SwapRequest[];
+  conflicts: Conflict[];
+};
+
+type Action =
+  | { type: "SET_SCHEDULE"; payload: ScheduleMap }
+  | { type: "ADD_SWAP_REQUEST"; payload: SwapRequest }
+  | { type: "APPROVE_SWAP"; payload: number } // request id
+  | { type: "REJECT_SWAP"; payload: number } // request id
+  | { type: "CLEAR_CONFLICTS" }
+  | { type: "SET_CONFLICTS"; payload: Conflict[] };
+
+/* ---------- Reducer ---------- */
+
+const scheduleReducer = (state: ScheduleState, action: Action): ScheduleState => {
   switch (action.type) {
-    case 'SET_SCHEDULE':
+    case "SET_SCHEDULE":
       return { ...state, schedule: action.payload };
-    case 'ADD_SWAP_REQUEST':
-      return { 
-        ...state, 
-        swapRequests: [...state.swapRequests, action.payload]
+    case "ADD_SWAP_REQUEST":
+      return {
+        ...state,
+        swapRequests: [...state.swapRequests, action.payload],
       };
-    case 'APPROVE_SWAP':
-      const approvedSwap = state.swapRequests.find(req => req.id === action.payload);
+    case "APPROVE_SWAP": {
+      const approvedSwap = state.swapRequests.find((r) => r.id === action.payload);
       if (!approvedSwap) return state;
 
-      const newSchedule = { ...state.schedule };
+      // Create a deep-ish copy of schedule for mutation
+      const newSchedule: ScheduleMap = JSON.parse(JSON.stringify(state.schedule));
 
-      if (approvedSwap.type === 'swap') {
-        const temp = newSchedule[approvedSwap.fromDentist]?.[approvedSwap.day]?.[approvedSwap.shift];
-        if (newSchedule[approvedSwap.fromDentist] && newSchedule[approvedSwap.fromDentist][approvedSwap.day]) {
-          newSchedule[approvedSwap.fromDentist][approvedSwap.day][approvedSwap.shift] = 
-            newSchedule[approvedSwap.toDentist]?.[approvedSwap.targetDay]?.[approvedSwap.targetShift] || null;
+      if (approvedSwap.type === "swap") {
+        const fromDentist = approvedSwap.fromDentist;
+        const toDentist = approvedSwap.toDentist!;
+        const { day, shift, targetDay, targetShift } = approvedSwap;
+
+        const fromSlot =
+          newSchedule[fromDentist]?.[day]?.[shift] ?? null;
+
+        const toSlot =
+          newSchedule[toDentist]?.[targetDay ?? day]?.[targetShift ?? shift] ??
+          null;
+
+        // swap (safe assignment)
+        if (newSchedule[fromDentist] && newSchedule[fromDentist][day]) {
+          newSchedule[fromDentist][day][shift] = toSlot;
         }
-        if (newSchedule[approvedSwap.toDentist] && newSchedule[approvedSwap.toDentist][approvedSwap.targetDay]) {
-          newSchedule[approvedSwap.toDentist][approvedSwap.targetDay][approvedSwap.targetShift] = temp || null;
+        if (newSchedule[toDentist] && newSchedule[toDentist][targetDay ?? day]) {
+          newSchedule[toDentist][targetDay ?? day][targetShift ?? shift] = fromSlot;
         }
-      } else if (approvedSwap.type === 'release') {
-        if (newSchedule[approvedSwap.fromDentist] && newSchedule[approvedSwap.fromDentist][approvedSwap.day]) {
-          newSchedule[approvedSwap.fromDentist][approvedSwap.day][approvedSwap.shift] = null;
+      } else if (approvedSwap.type === "release") {
+        const fromDentist = approvedSwap.fromDentist;
+        const { day, shift } = approvedSwap;
+        if (newSchedule[fromDentist] && newSchedule[fromDentist][day]) {
+          newSchedule[fromDentist][day][shift] = null;
         }
       }
 
       return {
         ...state,
         schedule: newSchedule,
-        swapRequests: state.swapRequests.filter(req => req.id !== action.payload)
+        swapRequests: state.swapRequests.filter((r) => r.id !== action.payload),
       };
-    case 'REJECT_SWAP':
+    }
+    case "REJECT_SWAP":
       return {
         ...state,
-        swapRequests: state.swapRequests.filter(req => req.id !== action.payload)
+        swapRequests: state.swapRequests.filter((r) => r.id !== action.payload),
       };
-    case 'CLEAR_CONFLICTS':
+    case "CLEAR_CONFLICTS":
       return { ...state, conflicts: [] };
-    case 'SET_CONFLICTS':
+    case "SET_CONFLICTS":
       return { ...state, conflicts: action.payload };
     default:
       return state;
   }
 };
 
-const DentistDutiesScheduler = () => {
-  const [dentists] = useState(initialDentists);
-  const [selectedWeek, setSelectedWeek] = useState(new Date());
+/* ---------- Component ---------- */
+
+const DentistDutiesScheduler: React.FC = () => {
+  const [dentists] = useState(() => initialDentists);
+  const [selectedWeek, setSelectedWeek] = useState<Date>(() => new Date());
   const [showSwapModal, setShowSwapModal] = useState(false);
-  const [selectedCell, setSelectedCell] = useState(null);
+  const [selectedCell, setSelectedCell] = useState<{
+    dentistId: number;
+    day: Day;
+    shift: Shift;
+  } | null>(null);
   const [showAdminPanel, setShowAdminPanel] = useState(false);
   const [isAdmin, setIsAdmin] = useState(true);
 
-  const [swapTargetDentist, setSwapTargetDentist] = useState('');
-  const [swapTargetDay, setSwapTargetDay] = useState('');
-  const [swapTargetShift, setSwapTargetShift] = useState('');
+  const [swapTargetDentist, setSwapTargetDentist] = useState<string>("");
+  const [swapTargetDay, setSwapTargetDay] = useState<string>("");
+  const [swapTargetShift, setSwapTargetShift] = useState<string>("");
 
   const [state, dispatch] = useReducer(scheduleReducer, {
     schedule: {},
     swapRequests: [],
-    conflicts: []
-  });
+    conflicts: [],
+  } as ScheduleState);
 
-  // Auto-assign shifts
-  const autoAssignShifts = () => {
-    const newSchedule = {};
-    const dentistShiftCounts = {};
-    const conflicts = [];
+  /* ---------- Helpers ---------- */
 
-    dentists.forEach(dentist => {
-      newSchedule[dentist.id] = {};
-      dentistShiftCounts[dentist.id] = 0;
-      daysOfWeek.forEach(day => {
-        newSchedule[dentist.id][day] = { morning: null, afternoon: null };
+  const makeEmptySchedule = (): ScheduleMap => {
+    const map: ScheduleMap = {};
+    dentists.forEach((d) => {
+      map[d.id] = {} as Record<Day, Record<Shift, ScheduleAssignment | null>>;
+      (daysOfWeek as Day[]).forEach((day) => {
+        map[d.id][day] = { morning: null, afternoon: null };
       });
     });
+    return map;
+  };
 
-    const allAssignments = [];
-    dentists.forEach(dentist => {
-      daysOfWeek.forEach(day => {
-        shifts.forEach(shift => {
-          if (dentist.availability[day]?.includes(shift)) {
-            allAssignments.push({
-              dentistId: dentist.id,
-              day,
-              shift,
-              dentistName: dentist.name,
-              maxShifts: dentist.maxWeeklyShifts
-            });
-          }
-        });
-      });
-    });
+  // Build conflicts from a schedule (pure)
+  const computeConflicts = (schedule: ScheduleMap): Conflict[] => {
+    const conflicts: Conflict[] = [];
 
-    allAssignments.sort((a, b) => {
-      const countA = dentistShiftCounts[a.dentistId];
-      const countB = dentistShiftCounts[b.dentistId];
-      return countA - countB;
-    });
-
-    const shiftRequirements = {};
-    daysOfWeek.forEach(day => {
-      shiftRequirements[day] = { morning: 1, afternoon: 1 };
-    });
-
-    allAssignments.forEach(assignment => {
-      const { dentistId, day, shift, maxShifts } = assignment;
-
-      if (dentistShiftCounts[dentistId] < maxShifts) {
-        if (shiftRequirements[day][shift] > 0) {
-          const hasConflict = shifts.some(s => 
-            s !== shift && newSchedule[dentistId][day][s] !== null
-          );
-
-          if (!hasConflict) {
-            newSchedule[dentistId][day][shift] = {
-              dentistId,
-              dentistName: dentists.find(d => d.id === dentistId).name,
-              assigned: true,
-              day,
-              shift
-            };
-            dentistShiftCounts[dentistId]++;
-            shiftRequirements[day][shift]--;
-          } else {
-            conflicts.push({
-              id: `conflict-${dentistId}-${day}`,
-              message: `${dentists.find(d => d.id === dentistId).name} has conflicting shifts on ${day}`,
-              dentistId,
-              day,
-              type: 'same-day-conflict'
-            });
-          }
-        }
-      }
-    });
-
-    daysOfWeek.forEach(day => {
-      shifts.forEach(shift => {
-        if (shiftRequirements[day][shift] > 0) {
+    // same-day conflicts: dentist assigned both shifts in same day (not allowed by your hasConflict logic)
+    (Object.keys(schedule) as unknown as string[]).forEach((dentistIdStr) => {
+      const dentistId = Number(dentistIdStr);
+      (daysOfWeek as Day[]).forEach((day) => {
+        const morning = schedule[dentistId]?.[day]?.morning;
+        const afternoon = schedule[dentistId]?.[day]?.afternoon;
+        if (morning && afternoon) {
           conflicts.push({
-            id: `uncovered-${day}-${shift}`,
-            message: `No coverage for ${shift} shift on ${day}`,
+            id: `conflict-${dentistId}-${day}`,
+            message: `${dentists.find((d) => d.id === dentistId)?.name || "Dentist"} has conflicting shifts on ${day}`,
+            dentistId,
             day,
-            shift,
-            type: 'no-coverage'
+            type: "same-day-conflict",
           });
         }
       });
     });
 
-    dispatch({ type: 'SET_SCHEDULE', payload: newSchedule });
-    dispatch({ type: 'SET_CONFLICTS', payload: conflicts });
+    // uncovered shifts (if any shift has no dentist assigned at all)
+    (daysOfWeek as Day[]).forEach((day) => {
+      (shifts as Shift[]).forEach((shift) => {
+        // check whether at least one dentist is assigned this shift
+        const assignedAny = (Object.keys(schedule) as unknown as string[]).some((dIdStr) => {
+          const dId = Number(dIdStr);
+          return !!schedule[dId]?.[day]?.[shift];
+        });
+        if (!assignedAny) {
+          conflicts.push({
+            id: `uncovered-${day}-${shift}`,
+            message: `No coverage for ${shift} shift on ${day}`,
+            day,
+            shift,
+            type: "no-coverage",
+          });
+        }
+      });
+    });
+
+    return conflicts;
   };
 
+  // Cleaner, fair per-shift assignment algorithm: for each day+shift pick available dentist with lowest current assigned count
+  const autoAssignShifts = useCallback(() => {
+    const schedule = makeEmptySchedule();
+    const assignedCounts: Record<number, number> = {};
+    dentists.forEach((d) => (assignedCounts[d.id] = 0));
+
+    // For each day and each shift, pick best dentist
+    (daysOfWeek as Day[]).forEach((day) => {
+      (shifts as Shift[]).forEach((shift) => {
+        // candidates: dentists available for this day/shift and not exceeded max and not already assigned same day other shift
+        const candidates = dentists
+          .filter((d) => d.availability[day]?.includes(shift))
+          .filter((d) => assignedCounts[d.id] < d.maxWeeklyShifts)
+          .filter((d) => {
+            // avoid same day double booking: if other shift of same day already assigned to this dentist -> skip
+            const otherShift: Shift = shift === "morning" ? "afternoon" : "morning";
+            return !schedule[d.id][day][otherShift];
+          });
+
+        if (candidates.length === 0) {
+          // no candidate => leave uncovered (will be detected in conflicts)
+          return;
+        }
+
+        // pick candidate with smallest assigned count (tie-break by dentist id)
+        candidates.sort((a, b) => {
+          const ca = assignedCounts[a.id];
+          const cb = assignedCounts[b.id];
+          return ca !== cb ? ca - cb : a.id - b.id;
+        });
+
+        const pick = candidates[0];
+        schedule[pick.id][day][shift] = {
+          dentistId: pick.id,
+          dentistName: pick.name,
+          assigned: true,
+          day,
+          shift,
+        };
+        assignedCounts[pick.id] += 1;
+      });
+    });
+
+    const conflicts = computeConflicts(schedule);
+
+    dispatch({ type: "SET_SCHEDULE", payload: schedule });
+    dispatch({ type: "SET_CONFLICTS", payload: conflicts });
+  }, [dentists]);
+
+  // runs once on mount (lint-safe because autoAssignShifts is useCallback)
   useEffect(() => {
     autoAssignShifts();
-  }, []);
+  }, [autoAssignShifts]);
 
-  const handleCellClick = (dentistId, day, shift) => {
+  const handleCellClick = (dentistId: number, day: Day, shift: Shift) => {
+    // only dentists (non-admin) can request swaps in this design
     if (!isAdmin) {
+      // only allow clicking when that dentist is assigned that shift (prevents requesting swap on empty availability)
+      const assigned = !!state.schedule?.[dentistId]?.[day]?.[shift];
+      if (!assigned) return;
       setSelectedCell({ dentistId, day, shift });
       setShowSwapModal(true);
     }
   };
 
-  const requestSwap = (type, targetDentist = null, targetDay = null, targetShift = null) => {
+  // Requesting swap/release (dentist action)
+  const requestSwap = (
+    type: "swap" | "release",
+    targetDentist: number | null = null,
+    targetDay: Day | null = null,
+    targetShift: Shift | null = null
+  ) => {
     if (!selectedCell) return;
 
-    const swapRequest = {
+    const swapRequest: SwapRequest = {
       id: Date.now(),
-      type, // 'swap' or 'release'
+      type,
       fromDentist: selectedCell.dentistId,
       day: selectedCell.day,
       shift: selectedCell.shift,
       toDentist: targetDentist,
-      targetDay: targetDay,
-      targetShift: targetShift,
-      timestamp: new Date().toISOString(), // store ISO string (safer)
-      status: 'pending',
-      fromDentistName: dentists.find(d => d.id === selectedCell.dentistId)?.name,
-      toDentistName: targetDentist ? dentists.find(d => d.id === targetDentist)?.name : null
+      targetDay,
+      targetShift,
+      timestamp: new Date().toISOString(),
+      status: "pending",
+      fromDentistName: dentists.find((d) => d.id === selectedCell.dentistId)?.name,
+      toDentistName: targetDentist ? dentists.find((d) => d.id === targetDentist)?.name ?? null : null,
     };
 
-    dispatch({ type: 'ADD_SWAP_REQUEST', payload: swapRequest });
+    dispatch({ type: "ADD_SWAP_REQUEST", payload: swapRequest });
     setShowSwapModal(false);
     setSelectedCell(null);
-    // Reset modal fields
-    setSwapTargetDentist('');
-    setSwapTargetDay('');
-    setSwapTargetShift('');
+    setSwapTargetDentist("");
+    setSwapTargetDay("");
+    setSwapTargetShift("");
+    setShowAdminPanel(true); // nudge admin panel open so admin can approve
   };
 
-  // Helper: count assigned shifts for a dentist
-  const getDentistShiftCount = (dentistId) => {
+  // Admin approves a request: wrap dispatch + recompute conflicts
+  const approveSwap = (requestId: number) => {
+    dispatch({ type: "APPROVE_SWAP", payload: requestId });
+
+    // after schedule changed, re-evaluate conflicts
+    // small timeout to ensure reducer applied (but reducer is sync), so we can build new schedule from current state + this change:
+    // safer: read schedule from reducer result via new action sequence; simplest: recompute from current state after a tick
+    setTimeout(() => {
+      // NOTE: state.schedule hasn't updated yet in the closure; read from DOM via dispatching a SET_CONFLICTS derived from state after reducer has run.
+      // Workaround: compute conflicts by grabbing latest schedule from state AFTER reducer—since reducer is sync, using a microtask ensures closure sees new state.
+      // We'll dispatch a small action to recalc using current state.schedule (which is now updated).
+      // But this is simpler: request the reducer to recompute conflicts by computing them here from the latest state snapshot.
+      // To keep logic deterministic and simple, we'll re-run computeConflicts on the current state.schedule after a short tick.
+      // (This avoids putting dentist data inside reducer.)
+      const latestSchedule = (state.schedule && Object.keys(state.schedule).length > 0)
+        ? state.schedule
+        : makeEmptySchedule();
+      const newConflicts = computeConflicts(latestSchedule);
+      dispatch({ type: "SET_CONFLICTS", payload: newConflicts });
+    }, 0);
+  };
+
+  const rejectSwap = (requestId: number) => {
+    dispatch({ type: "REJECT_SWAP", payload: requestId });
+  };
+
+  // count assigned shifts for display
+  const getDentistShiftCount = (dentistId: number) => {
     let count = 0;
     const scheduleForDentist = state.schedule?.[dentistId];
     if (!scheduleForDentist) return 0;
-
-    daysOfWeek.forEach(day => {
-      shifts.forEach(shift => {
+    (daysOfWeek as Day[]).forEach((day) => {
+      (shifts as Shift[]).forEach((shift) => {
         if (scheduleForDentist[day]?.[shift]) count++;
       });
     });
-
     return count;
   };
 
-  // Week navigation
-  const navigateWeek = (direction) => {
+  // week helpers (schedule isn't week-scoped in this version)
+  const navigateWeek = (direction: number) => {
     const newDate = new Date(selectedWeek);
-    newDate.setDate(newDate.getDate() + (direction * 7));
+    newDate.setDate(newDate.getDate() + direction * 7);
     setSelectedWeek(newDate);
+    // Optionally re-run auto-assign for that week if you implement per-week schedules
+    // autoAssignShifts();
   };
 
   const getWeekRange = () => {
     const startOfWeek = new Date(selectedWeek);
-    startOfWeek.setDate(selectedWeek.getDate() - selectedWeek.getDay() + 1); // Monday
+    // set to Monday
+    startOfWeek.setDate(selectedWeek.getDate() - selectedWeek.getDay() + 1);
     const endOfWeek = new Date(startOfWeek);
     endOfWeek.setDate(startOfWeek.getDate() + 6);
-
-    return {
-      start: startOfWeek,
-      end: endOfWeek
-    };
+    return { start: startOfWeek, end: endOfWeek };
   };
 
-  const getShiftInfo = (dentistId, day, shift) => {
-    const assignment = state.schedule[dentistId]?.[day]?.[shift];
+  const getShiftInfo = (dentistId: number, day: Day, shift: Shift) => {
+    const assignment = state.schedule?.[dentistId]?.[day]?.[shift];
     if (assignment) {
-      return {
-        assigned: true,
-        dentistName: assignment.dentistName,
-        isAvailable: true
-      };
+      return { assigned: true, dentistName: assignment.dentistName, isAvailable: true };
     }
-
-    const dentist = dentists.find(d => d.id === dentistId);
-    const isAvailable = dentist?.availability[day]?.includes(shift);
-
-    return {
-      assigned: false,
-      dentistName: null,
-      isAvailable
-    };
+    const dentist = dentists.find((d) => d.id === dentistId);
+    const isAvailable = dentist?.availability[day]?.includes(shift) ?? false;
+    return { assigned: false, dentistName: null, isAvailable };
   };
 
-  const getCellStyling = (dentistId, day, shift) => {
+  const getCellStyling = (dentistId: number, day: Day, shift: Shift) => {
     const shiftInfo = getShiftInfo(dentistId, day, shift);
-    const hasConflict = state.conflicts.some(c => 
-      c.dentistId === dentistId && c.day === day
-    );
-
-    if (hasConflict) {
-      return 'bg-red-100 border-red-300 text-red-800';
-    }
-
-    if (shiftInfo.assigned) {
-      return shift === 'morning' 
-        ? 'bg-blue-100 border-blue-300 text-blue-800'
-        : 'bg-green-100 border-green-300 text-green-800';
-    }
-
-    if (shiftInfo.isAvailable) {
-      return 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100';
-    }
-
-    return 'bg-gray-200 border-gray-300 text-gray-400';
+    const hasConflict = state.conflicts.some((c) => c.dentistId === dentistId && c.day === day);
+    if (hasConflict) return "bg-red-100 border-red-300 text-red-800";
+    if (shiftInfo.assigned) return shift === "morning"
+      ? "bg-blue-100 border-blue-300 text-blue-800"
+      : "bg-green-100 border-green-300 text-green-800";
+    if (shiftInfo.isAvailable) return "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100";
+    return "bg-gray-200 border-gray-300 text-gray-400";
   };
 
   const exportToCSV = () => {
-    const csvData = [];
-    csvData.push(['Dentist', ...daysOfWeek.map(day => `${day} Morning`), ...daysOfWeek.map(day => `${day} Afternoon`)]);
-
-    dentists.forEach(dentist => {
-      const row = [dentist.name];
-      daysOfWeek.forEach(day => {
-        const morningShift = getShiftInfo(dentist.id, day, 'morning');
-        row.push(morningShift.assigned ? 'Assigned' : (morningShift.isAvailable ? 'Available' : 'Not Available'));
+    const csvData: string[][] = [];
+    csvData.push(["Dentist", ...daysOfWeek.map((d) => `${d} Morning`), ...daysOfWeek.map((d) => `${d} Afternoon`)]);
+    dentists.forEach((dentist) => {
+      const row: string[] = [dentist.name];
+      (daysOfWeek as Day[]).forEach((day) => {
+        const morningShift = getShiftInfo(dentist.id, day, "morning");
+        row.push(morningShift.assigned ? "Assigned" : (morningShift.isAvailable ? "Available" : "Not Available"));
       });
-      daysOfWeek.forEach(day => {
-        const afternoonShift = getShiftInfo(dentist.id, day, 'afternoon');
-        row.push(afternoonShift.assigned ? 'Assigned' : (afternoonShift.isAvailable ? 'Available' : 'Not Available'));
+      (daysOfWeek as Day[]).forEach((day) => {
+        const afternoonShift = getShiftInfo(dentist.id, day, "afternoon");
+        row.push(afternoonShift.assigned ? "Assigned" : (afternoonShift.isAvailable ? "Available" : "Not Available"));
       });
       csvData.push(row);
     });
 
-    const csvContent = csvData.map(row => row.join(',')).join('\n');
-    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const csvContent = csvData.map((r) => r.join(",")).join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv" });
     const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = url;
-    a.download = 'dentist-schedule.csv';
+    a.download = "dentist-schedule.csv";
     a.click();
     window.URL.revokeObjectURL(url);
   };
 
+  /* ---------- JSX ---------- */
   return (
-    
-       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
       {/* Header */}
       <div className="bg-white border-b border-gray-200 px-6 py-4">
         <div className="flex items-center justify-between">
@@ -404,20 +523,16 @@ const DentistDutiesScheduler = () => {
           <div className="flex items-center space-x-4">
             {/* User Mode Toggle */}
             <div className="flex items-center space-x-2 bg-gray-100 rounded-lg p-1">
-              <button 
+              <button
                 onClick={() => setIsAdmin(true)}
-                className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
-                  isAdmin ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600'
-                }`}
+                className={`px-3 py-1 rounded text-sm font-medium transition-colors ${isAdmin ? "bg-white text-blue-600 shadow-sm" : "text-gray-600"}`}
               >
                 <UserCheck className="w-4 h-4 inline mr-1" />
                 Admin
               </button>
-              <button 
+              <button
                 onClick={() => setIsAdmin(false)}
-                className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
-                  !isAdmin ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600'
-                }`}
+                className={`px-3 py-1 rounded text-sm font-medium transition-colors ${!isAdmin ? "bg-white text-blue-600 shadow-sm" : "text-gray-600"}`}
               >
                 <Users className="w-4 h-4 inline mr-1" />
                 Dentist
@@ -426,10 +541,7 @@ const DentistDutiesScheduler = () => {
 
             {/* Notifications */}
             <div className="relative">
-              <button 
-                onClick={() => setShowAdminPanel(true)}
-                className="relative p-2 hover:bg-gray-100 rounded-lg"
-              >
+              <button onClick={() => setShowAdminPanel(true)} className="relative p-2 hover:bg-gray-100 rounded-lg">
                 <Bell className="w-6 h-6 text-gray-600" />
                 {state.swapRequests.length > 0 && (
                   <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
@@ -439,18 +551,12 @@ const DentistDutiesScheduler = () => {
               </button>
             </div>
 
-            <button 
-              onClick={autoAssignShifts}
-              className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-2 rounded-lg font-medium hover:shadow-lg transition-all duration-200 flex items-center space-x-2"
-            >
+            <button onClick={autoAssignShifts} className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-2 rounded-lg font-medium hover:shadow-lg transition-all duration-200 flex items-center space-x-2">
               <RefreshCw className="w-4 h-4" />
               <span>Auto Assign</span>
             </button>
 
-            <button 
-              onClick={exportToCSV}
-              className="bg-green-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-green-700 transition-colors flex items-center space-x-2"
-            >
+            <button onClick={exportToCSV} className="bg-green-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-green-700 transition-colors flex items-center space-x-2">
               <Download className="w-4 h-4" />
               <span>Export CSV</span>
             </button>
@@ -465,19 +571,19 @@ const DentistDutiesScheduler = () => {
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-6">
               <div className="flex items-center space-x-2">
-                <div className="w-4 h-4 bg-blue-100 border border-blue-300 rounded"></div>
+                <div className="w-4 h-4 bg-blue-100 border border-blue-300 rounded" />
                 <span className="text-sm text-gray-600">Morning Shift</span>
               </div>
               <div className="flex items-center space-x-2">
-                <div className="w-4 h-4 bg-green-100 border border-green-300 rounded"></div>
+                <div className="w-4 h-4 bg-green-100 border border-green-300 rounded" />
                 <span className="text-sm text-gray-600">Afternoon Shift</span>
               </div>
               <div className="flex items-center space-x-2">
-                <div className="w-4 h-4 bg-red-100 border border-red-300 rounded"></div>
+                <div className="w-4 h-4 bg-red-100 border border-red-300 rounded" />
                 <span className="text-sm text-gray-600">Conflict</span>
               </div>
               <div className="flex items-center space-x-2">
-                <div className="w-4 h-4 bg-gray-200 border border-gray-300 rounded"></div>
+                <div className="w-4 h-4 bg-gray-200 border border-gray-300 rounded" />
                 <span className="text-sm text-gray-600">Not Available</span>
               </div>
             </div>
@@ -489,21 +595,16 @@ const DentistDutiesScheduler = () => {
                   <span>{state.conflicts.length} Conflicts</span>
                 </div>
               )}
+
               <div className="flex items-center space-x-2">
-                <button 
-                  onClick={() => navigateWeek(-1)}
-                  className="p-1 hover:bg-gray-100 rounded"
-                >
+                <button onClick={() => navigateWeek(-1)} className="p-1 hover:bg-gray-100 rounded">
                   <ChevronLeft className="w-4 h-4" />
                 </button>
                 <Clock className="w-4 h-4" />
                 <span>
                   {getWeekRange().start.toLocaleDateString()} - {getWeekRange().end.toLocaleDateString()}
                 </span>
-                <button 
-                  onClick={() => navigateWeek(1)}
-                  className="p-1 hover:bg-gray-100 rounded"
-                >
+                <button onClick={() => navigateWeek(1)} className="p-1 hover:bg-gray-100 rounded">
                   <ChevronRight className="w-4 h-4" />
                 </button>
               </div>
@@ -518,7 +619,7 @@ const DentistDutiesScheduler = () => {
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
                   <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900 w-64">Dentist</th>
-                  {daysOfWeek.map(day => (
+                  {daysOfWeek.map((day) => (
                     <th key={day} className="px-4 py-4 text-center text-sm font-semibold text-gray-900 min-w-32">
                       <div className="capitalize">{day}</div>
                       <div className="text-xs text-gray-500 font-normal mt-1">M / A</div>
@@ -527,19 +628,17 @@ const DentistDutiesScheduler = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
-                {dentists.map(dentist => (
+                {dentists.map((dentist) => (
                   <tr key={dentist.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-3">
                           <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-sm font-semibold">
-                            {dentist.name.split(' ').map(n => n[0]).join('')}
+                            {dentist.name.split(" ").map((n) => n[0]).join("")}
                           </div>
                           <div>
                             <div className="font-medium text-gray-900">{dentist.name}</div>
-                            <div className="text-sm text-gray-500">
-                              Max: {dentist.maxWeeklyShifts} shifts/week
-                            </div>
+                            <div className="text-sm text-gray-500">Max: {dentist.maxWeeklyShifts} shifts/week</div>
                           </div>
                         </div>
                         <div className="text-right">
@@ -550,24 +649,21 @@ const DentistDutiesScheduler = () => {
                         </div>
                       </div>
                     </td>
-                    {daysOfWeek.map(day => (
+                    {daysOfWeek.map((day) => (
                       <td key={`${dentist.id}-${day}`} className="px-2 py-4">
                         <div className="space-y-1">
-                          {/* Morning Shift */}
                           <div
-                            onClick={() => handleCellClick(dentist.id, day, 'morning')}
-                            className={`h-8 rounded border text-xs font-medium flex items-center justify-center cursor-pointer transition-all ${getCellStyling(dentist.id, day, 'morning')}`}
+                            onClick={() => handleCellClick(dentist.id, day as Day, "morning")}
+                            className={`h-8 rounded border text-xs font-medium flex items-center justify-center cursor-pointer transition-all ${getCellStyling(dentist.id, day as Day, "morning")}`}
                           >
-                            {getShiftInfo(dentist.id, day, 'morning').assigned ? 'M' : 
-                             getShiftInfo(dentist.id, day, 'morning').isAvailable ? '○' : '×'}
+                            {getShiftInfo(dentist.id, day as Day, "morning").assigned ? "M" : getShiftInfo(dentist.id, day as Day, "morning").isAvailable ? "○" : "×"}
                           </div>
-                          {/* Afternoon Shift */}
+
                           <div
-                            onClick={() => handleCellClick(dentist.id, day, 'afternoon')}
-                            className={`h-8 rounded border text-xs font-medium flex items-center justify-center cursor-pointer transition-all ${getCellStyling(dentist.id, day, 'afternoon')}`}
+                            onClick={() => handleCellClick(dentist.id, day as Day, "afternoon")}
+                            className={`h-8 rounded border text-xs font-medium flex items-center justify-center cursor-pointer transition-all ${getCellStyling(dentist.id, day as Day, "afternoon")}`}
                           >
-                            {getShiftInfo(dentist.id, day, 'afternoon').assigned ? 'A' : 
-                             getShiftInfo(dentist.id, day, 'afternoon').isAvailable ? '○' : '×'}
+                            {getShiftInfo(dentist.id, day as Day, "afternoon").assigned ? "A" : getShiftInfo(dentist.id, day as Day, "afternoon").isAvailable ? "○" : "×"}
                           </div>
                         </div>
                       </td>
@@ -587,7 +683,7 @@ const DentistDutiesScheduler = () => {
               <h3 className="text-lg font-semibold text-red-900">Schedule Conflicts</h3>
             </div>
             <div className="space-y-2">
-              {state.conflicts.map(conflict => (
+              {state.conflicts.map((conflict) => (
                 <div key={conflict.id} className="text-sm text-red-700 bg-red-100 p-3 rounded-lg">
                   {conflict.message}
                 </div>
@@ -605,15 +701,17 @@ const DentistDutiesScheduler = () => {
 
             <div className="mb-4 p-4 bg-gray-50 rounded-lg">
               <p className="text-sm text-gray-600">
-                <strong>Current Assignment:</strong><br />
-                {dentists.find(d => d.id === selectedCell.dentistId)?.name}<br />
+                <strong>Current Assignment:</strong>
+                <br />
+                {dentists.find((d) => d.id === selectedCell.dentistId)?.name}
+                <br />
                 {selectedCell.day} - {selectedCell.shift}
               </p>
             </div>
 
             <div className="space-y-3">
               <button
-                onClick={() => requestSwap('release')}
+                onClick={() => requestSwap("release")}
                 className="w-full bg-orange-500 text-white py-2 rounded-lg hover:bg-orange-600 transition-colors flex items-center justify-center space-x-2"
               >
                 <XCircle className="w-4 h-4" />
@@ -623,30 +721,20 @@ const DentistDutiesScheduler = () => {
               <div className="space-y-3">
                 <div className="text-sm font-medium text-gray-700">Request Swap With:</div>
 
-                <select
-                  value={swapTargetDentist}
-                  onChange={(e) => setSwapTargetDentist(e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
+                <select value={swapTargetDentist} onChange={(e) => setSwapTargetDentist(e.target.value)} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                   <option value="">Select Dentist</option>
-                  {dentists
-                    .filter(d => d.id !== selectedCell.dentistId)
-                    .map(dentist => (
-                      <option key={dentist.id} value={dentist.id}>
-                        {dentist.name}
-                      </option>
-                    ))}
+                  {dentists.filter((d) => d.id !== selectedCell.dentistId).map((dentist) => (
+                    <option key={dentist.id} value={dentist.id}>
+                      {dentist.name}
+                    </option>
+                  ))}
                 </select>
 
                 {swapTargetDentist && (
                   <>
-                    <select
-                      value={swapTargetDay}
-                      onChange={(e) => setSwapTargetDay(e.target.value)}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    >
+                    <select value={swapTargetDay} onChange={(e) => setSwapTargetDay(e.target.value)} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                       <option value="">Select Day</option>
-                      {daysOfWeek.map(day => (
+                      {daysOfWeek.map((day) => (
                         <option key={day} value={day} className="capitalize">
                           {day}
                         </option>
@@ -654,11 +742,7 @@ const DentistDutiesScheduler = () => {
                     </select>
 
                     {swapTargetDay && (
-                      <select
-                        value={swapTargetShift}
-                        onChange={(e) => setSwapTargetShift(e.target.value)}
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      >
+                      <select value={swapTargetShift} onChange={(e) => setSwapTargetShift(e.target.value)} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                         <option value="">Select Shift</option>
                         <option value="morning">Morning</option>
                         <option value="afternoon">Afternoon</option>
@@ -670,7 +754,7 @@ const DentistDutiesScheduler = () => {
                 <button
                   onClick={() => {
                     if (swapTargetDentist && swapTargetDay && swapTargetShift) {
-                      requestSwap('swap', parseInt(swapTargetDentist), swapTargetDay, swapTargetShift);
+                      requestSwap("swap", parseInt(swapTargetDentist, 10), swapTargetDay as Day, swapTargetShift as Shift);
                     }
                   }}
                   disabled={!swapTargetDentist || !swapTargetDay || !swapTargetShift}
@@ -682,10 +766,7 @@ const DentistDutiesScheduler = () => {
               </div>
             </div>
 
-            <button
-              onClick={() => setShowSwapModal(false)}
-              className="w-full mt-4 bg-gray-500 text-white py-2 rounded-lg hover:bg-gray-600 transition-colors"
-            >
+            <button onClick={() => setShowSwapModal(false)} className="w-full mt-4 bg-gray-500 text-white py-2 rounded-lg hover:bg-gray-600 transition-colors">
               Cancel
             </button>
           </div>
@@ -698,12 +779,11 @@ const DentistDutiesScheduler = () => {
           <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full mx-4 p-6 max-h-96 overflow-y-auto">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-lg font-semibold text-gray-900">Swap Requests</h3>
-              <button 
-                onClick={() => setShowAdminPanel(false)}
-                className="p-2 hover:bg-gray-100 rounded-lg"
-              >
-                <XCircle className="w-5 h-5 text-gray-500" />
-              </button>
+              <div className="flex items-center space-x-2">
+                <button onClick={() => { setShowAdminPanel(false); }} className="p-2 hover:bg-gray-100 rounded-lg">
+                  <XCircle className="w-5 h-5 text-gray-500" />
+                </button>
+              </div>
             </div>
 
             {state.swapRequests.length === 0 ? (
@@ -713,37 +793,33 @@ const DentistDutiesScheduler = () => {
               </div>
             ) : (
               <div className="space-y-4">
-                {state.swapRequests.map(request => (
+                {state.swapRequests.map((request) => (
                   <div key={request.id} className="border border-gray-200 rounded-lg p-4">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
-                        <p className="font-medium text-gray-900 mb-2">
-                          {request.type === 'swap' ? 'Swap Request' : 'Release Request'}
-                        </p>
+                        <p className="font-medium text-gray-900 mb-2">{request.type === "swap" ? "Swap Request" : "Release Request"}</p>
                         <p className="text-sm text-gray-600 mb-3">
                           <strong>From:</strong> {request.fromDentistName} ({request.day} {request.shift})
-                          {request.type === 'swap' && (
+                          {request.type === "swap" && (
                             <>
                               <br />
-                              <strong>To:</strong> {request.toDentistName || 'Any available dentist'}
+                              <strong>To:</strong> {request.toDentistName || "Any available dentist"} ({request.targetDay ?? "same day"} {request.targetShift ?? "same shift"})
                             </>
                           )}
                         </p>
-                        <p className="text-xs text-gray-500">
-                          Requested: {new Date(request.timestamp).toLocaleString()}
-                        </p>
+                        <p className="text-xs text-gray-500">Requested: {new Date(request.timestamp).toLocaleString()}</p>
                       </div>
 
                       <div className="flex space-x-2">
                         <button
-                          onClick={() => dispatch({ type: 'APPROVE_SWAP', payload: request.id })}
+                          onClick={() => approveSwap(request.id)}
                           className="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600 transition-colors flex items-center space-x-1"
                         >
                           <CheckCircle className="w-4 h-4" />
                           <span>Approve</span>
                         </button>
                         <button
-                          onClick={() => dispatch({ type: 'REJECT_SWAP', payload: request.id })}
+                          onClick={() => rejectSwap(request.id)}
                           className="bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600 transition-colors flex items-center space-x-1"
                         >
                           <XCircle className="w-4 h-4" />
@@ -763,12 +839,3 @@ const DentistDutiesScheduler = () => {
 };
 
 export default DentistDutiesScheduler;
-
-
-
-
-
-
-
-
-
