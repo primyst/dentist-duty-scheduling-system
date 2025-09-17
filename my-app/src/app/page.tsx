@@ -17,6 +17,8 @@ import {
   UserCheck,
 } from "lucide-react";
 
+/* ---------- Data ---------- */
+
 const initialDentists = [
   {
     id: 1,
@@ -90,6 +92,7 @@ const initialDentists = [
   },
 ];
 
+/* keep days/shifts readonly but use spread copies when we need mutable lists */
 const daysOfWeek = [
   "monday",
   "tuesday",
@@ -99,11 +102,12 @@ const daysOfWeek = [
   "saturday",
   "sunday",
 ] as const;
-
 type Day = (typeof daysOfWeek)[number];
 
 const shifts = ["morning", "afternoon"] as const;
 type Shift = (typeof shifts)[number];
+
+/* ---------- Types ---------- */
 
 type ScheduleAssignment = {
   dentistId: number;
@@ -251,7 +255,8 @@ const DentistDutiesScheduler: React.FC = () => {
     const map: ScheduleMap = {};
     dentists.forEach((d) => {
       map[d.id] = {} as Record<Day, Record<Shift, ScheduleAssignment | null>>;
-      (daysOfWeek as Day[]).forEach((day) => {
+      // use a mutable copy of readonly tuple
+      [...daysOfWeek].forEach((day: Day) => {
         map[d.id][day] = { morning: null, afternoon: null };
       });
     });
@@ -262,10 +267,10 @@ const DentistDutiesScheduler: React.FC = () => {
   const computeConflicts = (schedule: ScheduleMap): Conflict[] => {
     const conflicts: Conflict[] = [];
 
-    // same-day conflicts: dentist assigned both shifts in same day (not allowed by your hasConflict logic)
-    (Object.keys(schedule) as unknown as string[]).forEach((dentistIdStr) => {
+    // same-day conflicts: dentist assigned both shifts in same day
+    (Object.keys(schedule) as string[]).forEach((dentistIdStr) => {
       const dentistId = Number(dentistIdStr);
-      (daysOfWeek as Day[]).forEach((day) => {
+      [...daysOfWeek].forEach((day: Day) => {
         const morning = schedule[dentistId]?.[day]?.morning;
         const afternoon = schedule[dentistId]?.[day]?.afternoon;
         if (morning && afternoon) {
@@ -281,10 +286,9 @@ const DentistDutiesScheduler: React.FC = () => {
     });
 
     // uncovered shifts (if any shift has no dentist assigned at all)
-    (daysOfWeek as Day[]).forEach((day) => {
-      (shifts as Shift[]).forEach((shift) => {
-        // check whether at least one dentist is assigned this shift
-        const assignedAny = (Object.keys(schedule) as unknown as string[]).some((dIdStr) => {
+    [...daysOfWeek].forEach((day: Day) => {
+      [...shifts].forEach((shift: Shift) => {
+        const assignedAny = (Object.keys(schedule) as string[]).some((dIdStr) => {
           const dId = Number(dIdStr);
           return !!schedule[dId]?.[day]?.[shift];
         });
@@ -303,31 +307,28 @@ const DentistDutiesScheduler: React.FC = () => {
     return conflicts;
   };
 
-  // Cleaner, fair per-shift assignment algorithm: for each day+shift pick available dentist with lowest current assigned count
+  // Fair per-shift assignment algorithm
   const autoAssignShifts = useCallback(() => {
     const schedule = makeEmptySchedule();
     const assignedCounts: Record<number, number> = {};
     dentists.forEach((d) => (assignedCounts[d.id] = 0));
 
     // For each day and each shift, pick best dentist
-    (daysOfWeek as Day[]).forEach((day) => {
-      (shifts as Shift[]).forEach((shift) => {
-        // candidates: dentists available for this day/shift and not exceeded max and not already assigned same day other shift
+    [...daysOfWeek].forEach((day: Day) => {
+      [...shifts].forEach((shift: Shift) => {
         const candidates = dentists
           .filter((d) => d.availability[day]?.includes(shift))
           .filter((d) => assignedCounts[d.id] < d.maxWeeklyShifts)
           .filter((d) => {
-            // avoid same day double booking: if other shift of same day already assigned to this dentist -> skip
             const otherShift: Shift = shift === "morning" ? "afternoon" : "morning";
             return !schedule[d.id][day][otherShift];
           });
 
         if (candidates.length === 0) {
-          // no candidate => leave uncovered (will be detected in conflicts)
           return;
         }
 
-        // pick candidate with smallest assigned count (tie-break by dentist id)
+        // pick candidate with smallest assigned count
         candidates.sort((a, b) => {
           const ca = assignedCounts[a.id];
           const cb = assignedCounts[b.id];
@@ -352,15 +353,21 @@ const DentistDutiesScheduler: React.FC = () => {
     dispatch({ type: "SET_CONFLICTS", payload: conflicts });
   }, [dentists]);
 
-  // runs once on mount (lint-safe because autoAssignShifts is useCallback)
+  // run once on mount
   useEffect(() => {
     autoAssignShifts();
   }, [autoAssignShifts]);
 
+  // recompute conflicts whenever schedule changes (deterministic, avoids setTimeout hacks)
+  useEffect(() => {
+    if (state.schedule && Object.keys(state.schedule).length > 0) {
+      const newConflicts = computeConflicts(state.schedule);
+      dispatch({ type: "SET_CONFLICTS", payload: newConflicts });
+    }
+  }, [state.schedule]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const handleCellClick = (dentistId: number, day: Day, shift: Shift) => {
-    // only dentists (non-admin) can request swaps in this design
     if (!isAdmin) {
-      // only allow clicking when that dentist is assigned that shift (prevents requesting swap on empty availability)
       const assigned = !!state.schedule?.[dentistId]?.[day]?.[shift];
       if (!assigned) return;
       setSelectedCell({ dentistId, day, shift });
@@ -398,29 +405,12 @@ const DentistDutiesScheduler: React.FC = () => {
     setSwapTargetDentist("");
     setSwapTargetDay("");
     setSwapTargetShift("");
-    setShowAdminPanel(true); // nudge admin panel open so admin can approve
+    setShowAdminPanel(true);
   };
 
-  // Admin approves a request: wrap dispatch + recompute conflicts
+  // Admin approves a request: just dispatch; conflict recompute happens via the effect on schedule
   const approveSwap = (requestId: number) => {
     dispatch({ type: "APPROVE_SWAP", payload: requestId });
-
-    // after schedule changed, re-evaluate conflicts
-    // small timeout to ensure reducer applied (but reducer is sync), so we can build new schedule from current state + this change:
-    // safer: read schedule from reducer result via new action sequence; simplest: recompute from current state after a tick
-    setTimeout(() => {
-      // NOTE: state.schedule hasn't updated yet in the closure; read from DOM via dispatching a SET_CONFLICTS derived from state after reducer has run.
-      // Workaround: compute conflicts by grabbing latest schedule from state AFTER reducer—since reducer is sync, using a microtask ensures closure sees new state.
-      // We'll dispatch a small action to recalc using current state.schedule (which is now updated).
-      // But this is simpler: request the reducer to recompute conflicts by computing them here from the latest state snapshot.
-      // To keep logic deterministic and simple, we'll re-run computeConflicts on the current state.schedule after a short tick.
-      // (This avoids putting dentist data inside reducer.)
-      const latestSchedule = (state.schedule && Object.keys(state.schedule).length > 0)
-        ? state.schedule
-        : makeEmptySchedule();
-      const newConflicts = computeConflicts(latestSchedule);
-      dispatch({ type: "SET_CONFLICTS", payload: newConflicts });
-    }, 0);
   };
 
   const rejectSwap = (requestId: number) => {
@@ -432,26 +422,23 @@ const DentistDutiesScheduler: React.FC = () => {
     let count = 0;
     const scheduleForDentist = state.schedule?.[dentistId];
     if (!scheduleForDentist) return 0;
-    (daysOfWeek as Day[]).forEach((day) => {
-      (shifts as Shift[]).forEach((shift) => {
+    [...daysOfWeek].forEach((day: Day) => {
+      [...shifts].forEach((shift: Shift) => {
         if (scheduleForDentist[day]?.[shift]) count++;
       });
     });
     return count;
   };
 
-  // week helpers (schedule isn't week-scoped in this version)
+  // week helpers
   const navigateWeek = (direction: number) => {
     const newDate = new Date(selectedWeek);
     newDate.setDate(newDate.getDate() + direction * 7);
     setSelectedWeek(newDate);
-    // Optionally re-run auto-assign for that week if you implement per-week schedules
-    // autoAssignShifts();
   };
 
   const getWeekRange = () => {
     const startOfWeek = new Date(selectedWeek);
-    // set to Monday
     startOfWeek.setDate(selectedWeek.getDate() - selectedWeek.getDay() + 1);
     const endOfWeek = new Date(startOfWeek);
     endOfWeek.setDate(startOfWeek.getDate() + 6);
@@ -481,14 +468,14 @@ const DentistDutiesScheduler: React.FC = () => {
 
   const exportToCSV = () => {
     const csvData: string[][] = [];
-    csvData.push(["Dentist", ...daysOfWeek.map((d) => `${d} Morning`), ...daysOfWeek.map((d) => `${d} Afternoon`)]);
+    csvData.push(["Dentist", ...[...daysOfWeek].map((d) => `${d} Morning`), ...[...daysOfWeek].map((d) => `${d} Afternoon`)]);
     dentists.forEach((dentist) => {
       const row: string[] = [dentist.name];
-      (daysOfWeek as Day[]).forEach((day) => {
+      [...daysOfWeek].forEach((day: Day) => {
         const morningShift = getShiftInfo(dentist.id, day, "morning");
         row.push(morningShift.assigned ? "Assigned" : (morningShift.isAvailable ? "Available" : "Not Available"));
       });
-      (daysOfWeek as Day[]).forEach((day) => {
+      [...daysOfWeek].forEach((day: Day) => {
         const afternoonShift = getShiftInfo(dentist.id, day, "afternoon");
         row.push(afternoonShift.assigned ? "Assigned" : (afternoonShift.isAvailable ? "Available" : "Not Available"));
       });
@@ -505,7 +492,7 @@ const DentistDutiesScheduler: React.FC = () => {
     window.URL.revokeObjectURL(url);
   };
 
-  /* ---------- JSX ---------- */
+  /* ---------- JSX (unchanged visual structure) ---------- */
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
       {/* Header */}
