@@ -2,8 +2,62 @@
 
 import React from "react";
 
-const dentists = ["Dr. Sarah", "Dr. Micheal", "Dr. Usman", "Dr. Ubaydah", "Dr. Abdulqudus", "Dr. Faridah"];
+const dentists = [
+  "Dr. Sarah",
+  "Dr. Micheal",
+  "Dr. Usman",
+  "Dr. Ubaydah",
+  "Dr. Abdulqudus",
+  "Dr. Faridah",
+];
+
 const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
+
+// Dummy schedule (dentist -> day -> shift)
+const schedule: Record<string, Record<string, string>> = {
+  "Dr. Sarah": {
+    Monday: "Morning",
+    Tuesday: "Afternoon",
+    Wednesday: "Morning",
+    Thursday: "Afternoon",
+    Friday: "Morning",
+  },
+  "Dr. Micheal": {
+    Monday: "Afternoon",
+    Tuesday: "Morning",
+    Wednesday: "Afternoon",
+    Thursday: "Morning",
+    Friday: "Afternoon",
+  },
+  "Dr. Usman": {
+    Monday: "Morning",
+    Tuesday: "Morning",
+    Wednesday: "Afternoon",
+    Thursday: "Afternoon",
+    Friday: "Morning",
+  },
+  "Dr. Ubaydah": {
+    Monday: "Afternoon",
+    Tuesday: "Afternoon",
+    Wednesday: "Morning",
+    Thursday: "Morning",
+    Friday: "Afternoon",
+  },
+  "Dr. Abdulqudus": {
+    Monday: "Morning",
+    Tuesday: "Afternoon",
+    Wednesday: "Morning",
+    Thursday: "Afternoon",
+    Friday: "Morning",
+  },
+  "Dr. Faridah": {
+    Monday: "Afternoon",
+    Tuesday: "Morning",
+    Wednesday: "Afternoon",
+    Thursday: "Morning",
+    Friday: "Afternoon",
+  },
+};
 
 const ScheduleTable = () => {
   return (
@@ -28,7 +82,7 @@ const ScheduleTable = () => {
                   key={`${dentist}-${day}`}
                   className="px-4 py-2 text-center text-sm text-slate-600"
                 >
-                  Morning / Afternoon
+                  {schedule[dentist][day]}
                 </td>
               ))}
             </tr>
