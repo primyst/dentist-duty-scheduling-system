@@ -11,21 +11,16 @@ interface ScheduleTableProps {
 
 const ScheduleTable: React.FC<ScheduleTableProps> = ({ dentists, days, schedule, conflicts }) => (
   <div className="overflow-x-auto">
-    {/* Header */}
     <div className="flex">
       <div className="w-28 h-12 flex items-center justify-center border font-bold">Dentist</div>
-      {days.map((day) => (
-        <div key={day} className="w-28 h-12 flex items-center justify-center border font-bold">
-          {day}
-        </div>
+      {days.map(day => (
+        <div key={day} className="w-28 h-12 flex items-center justify-center border font-bold">{day}</div>
       ))}
     </div>
-
-    {/* Rows */}
-    {dentists.map((dentist) => (
+    {dentists.map(dentist => (
       <div key={dentist} className="flex">
         <div className="w-28 h-12 flex items-center justify-center border font-bold">{dentist}</div>
-        {days.map((day) => (
+        {days.map(day => (
           <ShiftCell key={day} shift={schedule[dentist][day]} conflict={conflicts[dentist]?.[day]} />
         ))}
       </div>
