@@ -1,6 +1,6 @@
 "use client";
 import React from "react";
-import ShiftCell from "@components/ShiftCell";
+import ShiftCell from "@/components/ShiftCell";
 
 interface ScheduleTableProps {
   dentists: string[];
