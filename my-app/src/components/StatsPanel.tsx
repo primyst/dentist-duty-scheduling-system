@@ -1,114 +1,50 @@
 "use client";
-
 import React from "react";
-import { Users, Calendar, BarChart3 } from "lucide-react";
-import { Bar, Pie } from "react-chartjs-2";
+import { Bar } from "react-chartjs-2";
 import {
   Chart as ChartJS,
   CategoryScale,
   LinearScale,
   BarElement,
-  ArcElement,
+  Title,
   Tooltip,
   Legend
 } from "chart.js";
 
-ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, Tooltip, Legend);
+ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
-// Schedule data (match your ScheduleTable)
-const schedule: Record<string, Record<string, string>> = {
-  "Dr. Sarah": { Monday: "Morning", Tuesday: "-", Wednesday: "Morning", Thursday: "-", Friday: "Morning" },
-  "Dr. Micheal": { Monday: "-", Tuesday: "-", Wednesday: "Afternoon", Thursday: "Morning", Friday: "Afternoon" },
-  "Dr. Usman": { Monday: "-", Tuesday: "Morning", Wednesday: "Afternoon", Thursday: "Afternoon", Friday: "-" },
-  "Dr. Ubaydah": { Monday: "Afternoon", Tuesday: "Afternoon", Wednesday: "-", Thursday: "-", Friday: "Afternoon" },
-  "Dr. Abdulqudus": { Monday: "Morning", Tuesday: "Afternoon", Wednesday: "-", Thursday: "Afternoon", Friday: "-" },
-  "Dr. Faridah": { Monday: "-", Tuesday: "Morning", Wednesday: "Afternoon", Thursday: "-", Friday: "Afternoon" },
-};
+interface StatsPanelProps {
+  schedule: Record<string, Record<string, string | null>>;
+}
 
-// Assign colors to dentists
-const dentistColors: Record<string, string> = {
-  "Dr. Sarah": "#3B82F6",
-  "Dr. Micheal": "#10B981",
-  "Dr. Usman": "#F59E0B",
-  "Dr. Ubaydah": "#8B5CF6",
-  "Dr. Abdulqudus": "#EC4899",
-  "Dr. Faridah": "#F97316",
-};
+const StatsPanel: React.FC<StatsPanelProps> = ({ schedule }) => {
+  const dentistNames = Object.keys(schedule);
+  const shiftCounts = dentistNames.map(d =>
+    Object.values(schedule[d]).filter(Boolean).length
+  );
 
-const StatsPanel = () => {
-  const dentists = Object.keys(schedule);
-
-  // Calculate shifts per dentist dynamically
-  const shiftsPerDentist: Record<string, number> = {};
-  dentists.forEach((dentist) => {
-    const shifts = Object.values(schedule[dentist]).filter((s) => s !== "-").length;
-    shiftsPerDentist[dentist] = shifts;
-  });
-
-  const totalShifts = Object.values(shiftsPerDentist).reduce((a, b) => a + b, 0);
-
-  // Bar chart
-  const barData = {
-    labels: dentists,
+  const data = {
+    labels: dentistNames,
     datasets: [
       {
-        label: "Shifts per Dentist",
-        data: dentists.map((d) => shiftsPerDentist[d]),
-        backgroundColor: dentists.map((d) => dentistColors[d]),
-      },
-    ],
+        label: "Total Shifts",
+        data: shiftCounts,
+        backgroundColor: "rgba(54, 162, 235, 0.7)"
+      }
+    ]
   };
 
-  // Pie chart
-  const pieData = {
-    labels: dentists,
-    datasets: [
-      {
-        data: dentists.map((d) => shiftsPerDentist[d]),
-        backgroundColor: dentists.map((d) => dentistColors[d]),
-      },
-    ],
+  const options = {
+    responsive: true,
+    plugins: {
+      legend: { position: "top" as const },
+      title: { display: true, text: "Shift Distribution per Dentist" }
+    }
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-      {/* Quick Stats */}
-      <div className="bg-white shadow rounded-lg p-4 flex items-center gap-4">
-        <Users className="text-blue-600" size={28} />
-        <div>
-          <p className="text-sm text-slate-500">Total Dentists</p>
-          <h3 className="text-xl font-bold">{dentists.length}</h3>
-        </div>
-      </div>
-
-      <div className="bg-white shadow rounded-lg p-4 flex items-center gap-4">
-        <Calendar className="text-green-600" size={28} />
-        <div>
-          <p className="text-sm text-slate-500">Shifts This Week</p>
-          <h3 className="text-xl font-bold">{totalShifts}</h3>
-        </div>
-      </div>
-
-      <div className="bg-white shadow rounded-lg p-4 flex items-center gap-4">
-        <BarChart3 className="text-purple-600" size={28} />
-        <div>
-          <p className="text-sm text-slate-500">Coverage</p>
-          <h3 className="text-xl font-bold">
-            {Math.round((totalShifts / (dentists.length * 5)) * 100)}%
-          </h3>
-        </div>
-      </div>
-
-      {/* Charts */}
-      <div className="md:col-span-2 bg-white rounded-lg shadow p-4">
-        <h4 className="font-semibold mb-2">Shifts per Dentist (Bar Chart)</h4>
-        <Bar data={barData} />
-      </div>
-
-      <div className="bg-white rounded-lg shadow p-4">
-        <h4 className="font-semibold mb-2">Shift Distribution (Pie Chart)</h4>
-        <Pie data={pieData} />
-      </div>
+    <div className="mt-6 p-4 border rounded-md bg-gray-100">
+      <Bar data={data} options={options} />
     </div>
   );
 };
