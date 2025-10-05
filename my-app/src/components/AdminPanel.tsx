@@ -1,10 +1,10 @@
 "use client";
 import React, { useState } from "react";
-import Header from "@components/Header";
-import ScheduleTable from "@components/ScheduleTable";
-import StatsPanel from "@components/StatsPanel";
-import StatusBar from "@components/StatusBar";
-import SwapModal from "@components/SwapModal";
+import Header from "@/components/Header";
+import ScheduleTable from "@/components/ScheduleTable";
+import StatsPanel from "@/components/StatsPanel";
+import StatusBar from "@/components/StatusBar";
+import SwapModal from "@/components/SwapModal";
 
 const dentists = ["Dr Abdulqudus", "Dr Usman", "Dr Kamal", "Dr Seun", "Dr Samuel"];
 const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
