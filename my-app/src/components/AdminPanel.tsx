@@ -1,8 +1,8 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import Header from "@/components/Header";
-import ScheduleTable from "@components/ScheduleTable";
-import StatsPanel from "@components/StatsPanel";
+import ScheduleTable from "@/components/ScheduleTable";
+import StatsPanel from "@/components/StatsPanel";
 import StatusBar from "@/components/StatusBar";
 import SwapModal from "@/components/SwapModal";
 import NotificationPanel from "@/components/NotificationPanel";
