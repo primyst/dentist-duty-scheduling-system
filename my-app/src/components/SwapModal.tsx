@@ -21,13 +21,13 @@ const SwapModal: React.FC<SwapModalProps> = ({ show, onClose, dentists, onSwap }
         <h2 className="text-lg font-bold mb-2">Swap Shift</h2>
         <div className="flex flex-col gap-2">
           <div>
-            <label>From Dentist:</label>
+            <label>From:</label>
             <select value={from} onChange={e => setFrom(e.target.value)} className="ml-2 border rounded p-1">
               {dentists.map(d => <option key={d}>{d}</option>)}
             </select>
           </div>
           <div>
-            <label>To Dentist:</label>
+            <label>To:</label>
             <select value={to} onChange={e => setTo(e.target.value)} className="ml-2 border rounded p-1">
               {dentists.map(d => <option key={d}>{d}</option>)}
             </select>
