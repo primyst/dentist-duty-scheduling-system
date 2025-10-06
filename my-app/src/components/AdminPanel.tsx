@@ -7,7 +7,7 @@ import StatusBar from "@/components/StatusBar";
 import SwapModal from "@/components/SwapModal";
 import NotificationPanel from "@/components/NotificationPanel";
 
-const dentists = ["Dr Abdulqudus", "Dr Uthman", "Dr Kamal", "Dr Seun", "Dr Samuel, Dr Akinwumi"];
+const dentists = ["Dr Abdulqudus", "Dr Uthman", "Dr Kamal", "Dr Seun", "Dr Samuel", "Dr Akinwumi"];
 const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
 const shifts = ["Morning", "Afternoon"];
 const MAX_SHIFTS = 3;
