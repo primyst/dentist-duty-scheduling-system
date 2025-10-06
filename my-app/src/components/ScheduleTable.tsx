@@ -10,7 +10,7 @@ interface ScheduleTableProps {
 }
 
 const ScheduleTable: React.FC<ScheduleTableProps> = ({ dentists, days, schedule, conflicts }) => (
-  <div className="overflow-x-auto">
+  <div className="overflow-x-auto mt-4">
     <div className="flex">
       <div className="w-28 h-12 flex items-center justify-center border font-bold">Dentist</div>
       {days.map(day => (
