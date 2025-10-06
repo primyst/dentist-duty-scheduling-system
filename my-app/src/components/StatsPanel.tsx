@@ -19,9 +19,7 @@ interface StatsPanelProps {
 
 const StatsPanel: React.FC<StatsPanelProps> = ({ schedule }) => {
   const dentistNames = Object.keys(schedule);
-  const shiftCounts = dentistNames.map(d =>
-    Object.values(schedule[d]).filter(Boolean).length
-  );
+  const shiftCounts = dentistNames.map(d => Object.values(schedule[d]).filter(Boolean).length);
 
   const data = {
     labels: dentistNames,
@@ -43,7 +41,7 @@ const StatsPanel: React.FC<StatsPanelProps> = ({ schedule }) => {
   };
 
   return (
-    <div className="mt-6 p-4 border rounded-md bg-gray-100">
+    <div className="mt-6 p-4 border rounded-md bg-gray-100 shadow">
       <Bar data={data} options={options} />
     </div>
   );
