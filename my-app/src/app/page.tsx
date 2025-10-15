@@ -1,21 +1,14 @@
 "use client"
 
-import React, { useState, useEffect } from "react";
+import React, {useState} from "react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
-import { AlertCircle, Clock, Users, CheckCircle, Zap, X, Plus, Trash2, Edit2, TrendingUp } from "lucide-react";
+import { AlertCircle, Clock, Users, CheckCircle, Zap, X, Trash2, Edit2, TrendingUp } from "lucide-react";
 
 const dentists = ["Dr Abdulqudus", "Dr Usman", "Dr Kamal", "Dr Seun", "Dr Samuel"];
 const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
 const shifts = ["Morning", "Afternoon"];
 const MAX_SHIFTS = 3;
 const requestsMap = { "Dr Abdulqudus": ["Friday"], "Dr Kamal": ["Monday"] };
-
-const COLORS = {
-  morning: "#3b82f6",
-  afternoon: "#10b981",
-  conflict: "#ef4444",
-  unassigned: "#e5e7eb"
-};
 
 export default function AdminPanel() {
   const [schedule, setSchedule] = useState(() =>
