@@ -8,33 +8,44 @@ const dentists = ["Dr Abdulqudus", "Dr Usman", "Dr Kamal", "Dr Seun", "Dr Samuel
 const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
 const shifts = ["Morning", "Afternoon"];
 const MAX_SHIFTS = 3;
-const requestsMap = { "Dr Abdulqudus": ["Friday"], "Dr Kamal": ["Monday"] };
+const requestsMap: Record<string, string[]> = { "Dr Abdulqudus": ["Friday"], "Dr Kamal": ["Monday"] };
+
+interface Schedule {
+  [dentist: string]: {
+    [day: string]: string | null;
+  };
+}
+
+interface Conflicts {
+  [dentist: string]: {
+    [day: string]: boolean;
+  };
+}
 
 export default function AdminPanel() {
-  const [schedule, setSchedule] = useState(() =>
+  const [schedule, setSchedule] = useState<Schedule>(() =>
     dentists.reduce((acc, d) => ({
       ...acc,
       [d]: days.reduce((a, day) => ({ ...a, [day]: null }), {})
     }), {})
   );
 
-  const [conflicts, setConflicts] = useState({});
+  const [conflicts, setConflicts] = useState<Conflicts>({});
   const [showSwapModal, setShowSwapModal] = useState(false);
   const [showStatsModal, setShowStatsModal] = useState(false);
-  const [notifications, setNotifications] = useState([]);
-  const [autoAssignLogs, setAutoAssignLogs] = useState([]);
-  const [editingCell, setEditingCell] = useState(null);
+  const [notifications, setNotifications] = useState<string[]>([]);
+  const [autoAssignLogs, setAutoAssignLogs] = useState<string[]>([]);
 
   const totalShifts = Object.values(schedule)
-    .flatMap(d => Object.values(d))
+    .flatMap((d: Record<string, string | null>) => Object.values(d))
     .filter(Boolean).length;
 
   const autoAssign = () => {
-    const newSchedule = JSON.parse(JSON.stringify(schedule));
-    const shiftCounts = {};
+    const newSchedule = JSON.parse(JSON.stringify(schedule)) as Schedule;
+    const shiftCounts: Record<string, number> = {};
     dentists.forEach(d => (shiftCounts[d] = 0));
-    const newConflicts = {};
-    const logs = [];
+    const newConflicts: Conflicts = {};
+    const logs: string[] = [];
 
     days.forEach(day => {
       shifts.forEach(shift => {
@@ -68,7 +79,7 @@ export default function AdminPanel() {
     setConflicts(newConflicts);
     setAutoAssignLogs(logs);
 
-    const notifs = [];
+    const notifs: string[] = [];
     Object.entries(requestsMap).forEach(([dentist, days_off]) => {
       notifs.push(`🙏 ${dentist} excluded from: ${days_off.join(", ")}`);
     });
@@ -91,8 +102,8 @@ export default function AdminPanel() {
     setAutoAssignLogs([]);
   };
 
-  const handleSwap = (from, to, day) => {
-    const s = JSON.parse(JSON.stringify(schedule));
+  const handleSwap = (from: string, to: string, day: string) => {
+    const s = JSON.parse(JSON.stringify(schedule)) as Schedule;
     [s[from][day], s[to][day]] = [s[to][day], s[from][day]];
     setSchedule(s);
     setNotifications([`🔄 Shift swapped: ${from} ↔ ${to} on ${day}`]);
@@ -107,8 +118,8 @@ export default function AdminPanel() {
   };
 
   const getShiftTypeStats = () => {
-    const morning = Object.values(schedule).flatMap(d => Object.values(d)).filter(v => v === "Morning").length;
-    const afternoon = Object.values(schedule).flatMap(d => Object.values(d)).filter(v => v === "Afternoon").length;
+    const morning = Object.values(schedule).flatMap((d: Record<string, string | null>) => Object.values(d)).filter(v => v === "Morning").length;
+    const afternoon = Object.values(schedule).flatMap((d: Record<string, string | null>) => Object.values(d)).filter(v => v === "Afternoon").length;
     return [
       { name: "Morning", value: morning },
       { name: "Afternoon", value: afternoon }
@@ -207,13 +218,13 @@ export default function AdminPanel() {
               </thead>
               <tbody className="divide-y divide-slate-700/50">
                 {dentists.map((dentist, idx) => (
-                  <tr key={dentist} className={idx % 2 === 0 ? "bg-slate-800/30" : "bg-slate-700/20"} onMouseEnter={() => setSelectedDentist(dentist)} onMouseLeave={() => setSelectedDentist(null)}>
+                  <tr key={dentist} className={idx % 2 === 0 ? "bg-slate-800/30" : "bg-slate-700/20"}>
                     <td className="px-4 py-4 font-semibold text-sm">{dentist}</td>
                     {days.map(day => {
                       const shift = schedule[dentist][day];
                       const hasConflict = conflicts[dentist]?.[day];
                       const isRequest = requestsMap[dentist]?.includes(day);
-                      
+
                       return (
                         <td key={day} className="px-4 py-4 text-center">
                           <div
@@ -224,7 +235,6 @@ export default function AdminPanel() {
                               isRequest ? "bg-amber-500/30 border border-amber-400 text-amber-100" :
                               "bg-slate-700/50 border border-slate-600 text-slate-400"
                             }`}
-                            onClick={() => setEditingCell(editingCell === `${dentist}-${day}` ? null : `${dentist}-${day}`)}
                           >
                             {shift || (isRequest ? "🚫" : "—")}
                           </div>
@@ -350,7 +360,13 @@ export default function AdminPanel() {
   );
 }
 
-function SwapForm({ dentists, days, onSwap }) {
+interface SwapFormProps {
+  dentists: string[];
+  days: string[];
+  onSwap: (from: string, to: string, day: string) => void;
+}
+
+function SwapForm({ dentists, days, onSwap }: SwapFormProps) {
   const [from, setFrom] = useState(dentists[0]);
   const [to, setTo] = useState(dentists[1]);
   const [day, setDay] = useState(days[0]);
