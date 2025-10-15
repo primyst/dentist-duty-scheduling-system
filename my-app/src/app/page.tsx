@@ -23,7 +23,6 @@ export default function AdminPanel() {
   const [showStatsModal, setShowStatsModal] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [autoAssignLogs, setAutoAssignLogs] = useState([]);
-  const [selectedDentist, setSelectedDentist] = useState(null);
   const [editingCell, setEditingCell] = useState(null);
 
   const totalShifts = Object.values(schedule)
