@@ -79,6 +79,11 @@ export default function AdminPanel() {
     setConflicts(newConflicts);
     setAutoAssignLogs(logs);
 
+    // Calculate actual total shifts assigned
+    const actualTotalShifts = Object.values(newSchedule)
+      .flatMap((d: Record<string, string | null>) => Object.values(d))
+      .filter(Boolean).length;
+
     const notifs: string[] = [];
     Object.entries(requestsMap).forEach(([dentist, days_off]) => {
       notifs.push(`🙏 ${dentist} excluded from: ${days_off.join(", ")}`);
@@ -86,7 +91,7 @@ export default function AdminPanel() {
     if (Object.keys(newConflicts).length > 0) {
       notifs.push(`⚠️ ${Object.keys(newConflicts).length} dentist(s) have conflicts`);
     }
-    notifs.push(`📊 Total shifts assigned: ${totalShifts + shifts.length * days.length}`);
+    notifs.push(`📊 Total shifts assigned: ${actualTotalShifts}`);
     setNotifications(notifs);
   };
 
