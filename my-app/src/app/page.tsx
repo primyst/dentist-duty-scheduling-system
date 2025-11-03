@@ -7,7 +7,6 @@ import { AlertCircle, Clock, Users, CheckCircle, Zap, X, Trash2, Edit2, Trending
 const dentists = ["Dr Abdulqudus", "Dr Usman", "Dr Kamal", "Dr Seun", "Dr Samuel"];
 const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
 const shifts = ["Morning", "Afternoon"];
-const MAX_SHIFTS = 3;
 const requestsMap: Record<string, string[]> = { "Dr Abdulqudus": ["Friday"], "Dr Kamal": ["Monday"] };
 
 interface Schedule {
@@ -23,6 +22,7 @@ interface Conflicts {
 }
 
 export default function AdminPanel() {
+  const [maxShifts, setMaxShifts] = useState(3);
   const [schedule, setSchedule] = useState<Schedule>(() =>
     dentists.reduce((acc, d) => ({
       ...acc,
@@ -50,7 +50,7 @@ export default function AdminPanel() {
     days.forEach(day => {
       shifts.forEach(shift => {
         const available = dentists.filter(
-          d => shiftCounts[d] < MAX_SHIFTS && !requestsMap[d]?.includes(day)
+          d => shiftCounts[d] < maxShifts && !requestsMap[d]?.includes(day)
         );
 
         if (!available.length) {
@@ -151,12 +151,47 @@ export default function AdminPanel() {
                 <p className="text-2xl font-bold text-amber-300">{Object.keys(requestsMap).length}</p>
                 <p className="text-xs text-blue-300 uppercase tracking-wide">Requests</p>
               </div>
+              <div className="bg-white/10 backdrop-blur rounded-lg p-4 border border-white/20">
+                <p className="text-2xl font-bold text-purple-300">{maxShifts}</p>
+                <p className="text-xs text-blue-300 uppercase tracking-wide">Max/Week</p>
+              </div>
             </div>
           </div>
         </div>
       </header>
 
       <div className="max-w-7xl mx-auto px-6 py-8">
+        {/* MAX_SHIFTS Control */}
+        <div className="bg-gradient-to-r from-purple-500/10 to-blue-500/10 border border-purple-500/30 rounded-xl p-6 mb-8 backdrop-blur shadow-lg">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div>
+              <h3 className="font-semibold text-purple-300 mb-2 flex items-center gap-2">
+                <TrendingUp size={18} /> Maximum Shifts Per Dentist
+              </h3>
+              <p className="text-sm text-slate-300">
+                Increasing MAX_SHIFTS allows more duties per dentist but also leads to higher conflict rates when multiple dentists approach their weekly limit. This parameter directly affects workload distribution and optimization performance in the Art Lottery Optimization-based scheduling system.
+              </p>
+            </div>
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => setMaxShifts(Math.max(1, maxShifts - 1))}
+                className="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-lg font-semibold transition"
+              >
+                −
+              </button>
+              <div className="bg-slate-700/50 border border-slate-600 rounded-lg px-6 py-2 min-w-[4rem] text-center">
+                <p className="text-3xl font-bold text-purple-300">{maxShifts}</p>
+              </div>
+              <button
+                onClick={() => setMaxShifts(maxShifts + 1)}
+                className="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-lg font-semibold transition"
+              >
+                +
+              </button>
+            </div>
+          </div>
+        </div>
+
         {/* Action Buttons */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
           <button
